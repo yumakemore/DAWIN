@@ -2,7 +2,7 @@
 
 Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Junwhan Kim (University of the District of Columbia).
 
-DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron ($\mathbf{y} = \sigma(\mathbf{w}^\top \mathbf{x} + b)$). Each unit binds spatial feature projection ($\mathbf{k}_m^\top \mathbf{x}_i$) and physical elapsed time ($-\omega_m \Delta t_i$) into an indivisible (*atomic*) spatiotemporal wave packet and integrates it directly into a neuron-local complex state governed by a stability-preserving damper evolution operator $\mathcal{D}_m(\Delta t_i) = \exp(-(\gamma_m + i\omega_m)\Delta t_i)$.
+DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron ($$y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$$). Each unit binds spatial feature projection ($\mathbf{k}_m^\top \mathbf{x}_i$) and physical elapsed time ($-\omega_m \Delta t_i$) into an indivisible (*atomic*) spatiotemporal wave packet and integrates it directly into a neuron-local complex state governed by a stability-preserving damper evolution operator $\mathcal{D}_m(\Delta t_i) = \exp(-(\gamma_m + i\omega_m)\Delta t_i)$.
 
 ---
 
