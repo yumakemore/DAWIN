@@ -1,0 +1,80 @@
+# Damped Atomic Wave Integration Neurons (DAWIN)
+
+Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Junwhan Kim (University of the District of Columbia).
+
+DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron ($y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$). Each unit binds spatial feature projection ($\mathbf{k}_m^\top \mathbf{x}_i$) and physical elapsed time ($-\omega_m \Delta t_i$) into an indivisible (*atomic*) spatiotemporal wave packet and integrates it directly into a neuron-local complex state governed by a stability-preserving damper evolution operator $\mathcal{D}_m(\Delta t_i) = \exp(-(\gamma_m + i\omega_m)\Delta t_i)$.
+
+---
+
+## Repository Structure
+
+### Core Model, Kernel & Dataset Modules
+* `dawin_core.py`: Drop-in `DAWINLinear` primitive with paired-real quadrature propagation, parallel associative prefix scan (`torch._higher_order_ops.associative_scan`), exact serial fallback, and component ablation toggles (`none`, `undamped`, `memoryless`, `cosine_only`, `decoupled`).
+* `dawin_triton.py`: Multi-block chunked Triton parallel associative scan kernel and custom autograd bridge supporting arbitrarily long sequences ($L > 4096$) in $O(\log L)$ parallel depth without materializing intermediate complex $[B, L, M]$ tensors in HBM.
+* `dawin_models.py`: Drop-in continuous-time backbones (`DAWINMLP`, `DAWINTransformer`, `DAWINGNN`) with automatic CUDA Triton dispatch (`use_triton=True`), alongside parameter-matched comparators (`MatchedReLUMLP`, `MatchedTimeTransformer`, `MatchedNeuralCDE`, `MatchedS5`, `MatchedMamba`, `MatchedGRUGNN`) and `find_matched_width` ($\le 2\%$ parameter parity).
+* `dawin_datasets.py`: Standardized data loaders, training-only normalization pipelines, and task metrics for MuJoCo irregular dynamics (`HalfCheetah-v5`, `Hopper-v5`, `Reacher-v5`, `Walker2d-v5`), PhysioNet Challenge 2012 (mask-aware mortality, mask-aware imputation, and dense WSP displacement), and ETH/UCY + JAAD trajectories.
+* `dawin_diagnostics.py`: RQ3 $\Delta t$-intervention diagnostics (true, batch-shuffled $\Delta t_{\text{perm}}$, and constant-mean $\Delta t_{\text{const}}$), RQ4 GPU throughput/memory profiling, and 20,000-resample paired bootstrap / Holm-Bonferroni significance tests.
+
+### Experiment Runners, Exporters & Plotting Scripts
+* `run_dawin_experiments.py`: Executes 10-seed (`101`–`110`) parameter-matched sweeps for a single task with configurable `--precision` (`fp32`, `bf16`, `fp16`) and writes `.json`, `.csv`, and `.md` summaries.
+* `run_all_dawin_benchmarks.py`: Orchestrates sequential 10-seed sweeps across all 11 benchmark tasks, runs the `--profile-b200` RQ4 GPU scaling suite, and automatically compiles LaTeX tables and publication figures.
+* `export_dawin_latex_tables.py`: Compiles `master_benchmark_summary_<precision>.json` and `rq4_b200_scaling_<precision>.json` into NeurIPS, ICLR, or ICML `booktabs` `\begin{table*}` blocks.
+* `plot_dawin_figures.py`: Renders publication-ready vector (`.pdf`) and raster (`.png`) figures for RQ1/RQ2 accuracy comparisons, RQ3 causal timing interventions, and RQ4 NVIDIA B200 GPU scaling curves.
+
+### Verification Suites
+* `verify_dawin_harness.py`: Validates serial-vs-scan equivalence, BIBO stability under spatial outliers ($\|\mathbf{x}\| \sim 10^6$), parameter parity, Triton-vs-PyTorch backbone gradient parity, and the end-to-end synthetic-to-LaTeX-and-figures pipeline.
+* `verify_extended_comparators.py`: Validates forward shapes, parameter parity ($\le 2\%$), and gradient flow across all parameter-matched comparators.
+* `verify_dawin_datasets.py`: Validates tensor shapes, non-negative $\Delta t$ invariants, and evaluation metrics across all 9 benchmark configurations.
+* `verify_triton_dawin.py`: Verifies numerical parity of the multi-block Triton kernel under `FP32`, `BF16`, and `FP16` autocast and benchmarks GPU latency.
+
+---
+
+## Installation & Runtime Policy
+
+```bash
+pip install -r requirements.txt
+```
+
+Following our NVIDIA B200 experimental protocol, mixed-precision runs default to `--precision bf16` with matrix-multiplication TF32 disabled (`torch.backends.cuda.matmul.allow_tf32 = False`), cuDNN TF32 enabled (`torch.backends.cudnn.allow_tf32 = True`), and FP32 accumulation retained inside the associative scan recurrence.
+
+---
+
+## Quickstart & Verification
+
+Run all four verification suites prior to launching cluster experiments:
+
+```bash
+python verify_dawin_harness.py
+python verify_extended_comparators.py
+python verify_dawin_datasets.py
+python verify_triton_dawin.py
+```
+
+---
+
+## Reproducing Paper Experiments
+
+### 1. Full 11-Task 10-Seed Benchmark Sweep + RQ4 B200 Profiling
+Runs RQ4 GPU scaling across batch sizes `1, 16, 256, 4096`, executes all 11 ten-seed (`101`–`110`) parameter-matched sweeps, and automatically exports NeurIPS `.tex` tables and `.pdf`/`.png` figures:
+
+```bash
+python run_all_dawin_benchmarks.py --profile-b200 --precision bf16 --venue neurips --device cuda:0
+```
+
+### 2. Standalone RQ4 NVIDIA B200 Throughput & Memory Profiling
+```bash
+python run_all_dawin_benchmarks.py --profile-only --precision bf16 --venue neurips --device cuda:0
+```
+
+### 3. Single-Task 10-Seed Sweep
+```bash
+python run_dawin_experiments.py --backbone mlp --task mujoco_halfcheetah --precision bf16
+python run_dawin_experiments.py --backbone transformer --task physionet_mortality --precision bf16
+python run_dawin_experiments.py --backbone mlp --task eth_ucy_jaad_pos --precision bf16
+```
+
+### 4. Standalone LaTeX Table Export & Figure Compilation
+```bash
+python export_dawin_latex_tables.py --results-dir results_dawin --precision bf16 --venue neurips --output results_dawin/dawin_neurips_tables_bf16.tex
+python plot_dawin_figures.py --results-dir results_dawin --precision bf16 --formats pdf png
+```

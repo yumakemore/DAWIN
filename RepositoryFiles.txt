@@ -1,0 +1,36 @@
+Your public DAWIN GitHub repository requires 18 files in total (13 Python modules and 5 documentation/configuration files).
+
+1. Core Model, Kernel & Dataset Modules (5 Files)
+
+• dawin_core.py: Implements the drop-in DAWINLinear primitive with paired-real quadrature propagation, parallel associative prefix scan, exact serial fallback, and component ablation toggles.
+• dawin_triton.py: Implements the multi-block chunked Triton parallel associative scan kernel and custom autograd bridge for GPU acceleration across arbitrarily long sequences.
+• dawin_models.py: Provides the three continuous-time DAWIN backbones (DAWINMLP, DAWINTransformer, DAWINGNN), five parameter-matched comparators (MatchedReLUMLP, MatchedTimeTransformer, MatchedNeuralCDE, MatchedS5, MatchedMamba, plus MatchedGRUGNN), and the parameter-matching width solver.
+• dawin_datasets.py: Provides data loaders, normalization hygiene, and metric helpers for MuJoCo irregular dynamics, mask-aware PhysioNet 2012, and ETH/UCY + JAAD trajectories.
+• dawin_diagnostics.py: Implements the RQ3 Δ t-perturbation suite (batch-shuffled and constant-mean intervals), RQ4 GPU throughput/memory profiling, and paired bootstrap / Holm-Bonferroni statistical tests.
+
+2. Experiment Runners, Exporters & Plotting Scripts (4 Files)
+
+• run_dawin_experiments.py: Runs 10-seed (101–110) parameter-matched sweeps for a single task with configurable --precision (fp32, bf16, fp16) and logs unified .json, .csv, and .md comparison tables.
+• run_all_dawin_benchmarks.py: Orchestrates sequential execution across all 11 benchmark tasks, runs the --profile-b200 RQ4 GPU scaling suite, and automatically compiles LaTeX tables and figures.
+• export_dawin_latex_tables.py: Compiles master_benchmark_summary_<precision>.json and rq4_b200_scaling_<precision>.json into NeurIPS, ICLR, or ICML booktabs \begin{table*} blocks.
+• plot_dawin_figures.py: Renders publication-ready .pdf and .png figures for RQ1/RQ2 accuracy comparisons, RQ3 causal timing interventions, and RQ4 NVIDIA B200 scaling curves.
+
+3. Verification & Unit-Test Suites (4 Files)
+
+• verify_dawin_harness.py: Verifies serial-vs-scan equivalence, BIBO stability under spatial outliers, Triton-vs-PyTorch backbone gradient parity, and the end-to-end synthetic-to-LaTeX-and-figures pipeline.
+• verify_extended_comparators.py: Validates forward shapes, parameter parity (≤ 2%), and gradient flow across all parameter-matched comparators.
+• verify_dawin_datasets.py: Validates tensor shapes, non-negative Δ t invariants, and evaluation metrics across all benchmark partitions.
+• verify_triton_dawin.py: Verifies forward/backward numerical accuracy of the multi-block Triton kernel under FP32, BF16, and FP16 autocast and benchmarks GPU latency.
+
+4. Repository Documentation & Metadata (5 Files)
+
+• README.md: Documents repository structure, environment setup, B200 runtime policies, and reproduction commands.
+• requirements.txt: Lists Python package dependencies (torch, triton, numpy, scipy, matplotlib, scikit-learn).
+• .gitignore: Excludes Python caches, Triton build artifacts, raw checkpoints, LaTeX build logs, and results_dawin/ output directories.
+• CITATION.bib: Provides the BibTeX citation entry for the DAWIN manuscript.
+• LICENSE: Specifies the open-source software license (such as MIT or Apache-2.0) for public release.
+If you'd like to regenerate any subset of these files for download right now, let me know which group you need first:
+• Core modules (dawin_core.py, dawin_triton.py, dawin_models.py, dawin_datasets.py, dawin_diagnostics.py)
+• Runners & exporters (run_dawin_experiments.py, run_all_dawin_benchmarks.py, export_dawin_latex_tables.py, plot_dawin_figures.py)
+• Verification suites & metadata (verify_*.py, README.md, requirements.txt, .gitignore, CITATION.bib, LICENSE)
+

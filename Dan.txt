@@ -1,0 +1,10 @@
+#Bash
+# Initialize and Push the DAWIN Repository
+
+git init -b main
+git add .
+git commit -m "Initial release: DAWIN primitive, Triton scan kernel, and benchmark harness"
+git remote add origin https://github.com/yumakemore/DAWIN.git
+git push -u origin main
+
+
