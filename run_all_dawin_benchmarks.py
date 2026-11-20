@@ -526,6 +526,11 @@ def parse_args() -> argparse.Namespace:
         help="Target conference style for automated LaTeX table export (default: neurips).",
     )
     parser.add_argument(
+        "--laplacian-weight",
+        type=float,
+        default=1e-4,
+    )
+    parser.add_argument(
         "--skip-latex-export",
         action="store_true",
         help="Disable automatic invocation of export_dawin_latex_tables.py at the end of the run.",
@@ -584,6 +589,8 @@ def main() -> None:
                 str(job.default_width),
                 "--num-layers",
                 str(job.default_layers),
+                "--laplacian-weight",
+                str(args.laplacian_weight),
                 "--out-dir",
                 str(results_dir),
                 "--seeds",

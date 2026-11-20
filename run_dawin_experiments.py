@@ -26,6 +26,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 
+from dawin_core import compute_dawin_laplacian_loss
 from dawin_diagnostics import (
     evaluate_dt_interventions,
     holm_bonferroni,
@@ -390,6 +391,7 @@ def train_single_seed(
     amp_dtype: torch.dtype | None,
     use_scaler: bool,
     device: torch.device,
+    laplacian_weight: float = 1e-4,
 ) -> RunMetrics:
     set_seed(seed)
     model = model.to(device)
@@ -414,6 +416,8 @@ def train_single_seed(
             with autocast_context(device, amp_dtype):
                 pred = model(x, dt)
                 loss, _ = compute_loss_and_metric(pred, y, mask, task_type)
+                if model_name == "dawin" and laplacian_weight > 0.0:
+                    loss = loss + laplacian_weight * compute_dawin_laplacian_loss(model)
 
             if not torch.isfinite(loss):
                 raise FloatingPointError(
@@ -461,6 +465,7 @@ def train_single_seed(
 
     # RQ4: Inference throughput & peak GPU memory under active precision policy
     seq_len = int(meta["seq_len"])
+    meta["laplacian_weight"] = float(args.laplacian_weight)
     d_in = int(meta["d_in"])
     with autocast_context(device, amp_dtype):
         prof = profile_inference_efficiency(
@@ -642,6 +647,7 @@ def main() -> None:
     parser.add_argument("--patience", type=int, default=20)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
+    parser.add_argument("--laplacian-weight", type=float, default=1e-4)
     parser.add_argument(
         "--seeds",
         type=int,
@@ -724,6 +730,7 @@ def main() -> None:
             amp_dtype=amp_dtype,
             use_scaler=use_scaler,
             device=device,
+            laplacian_weight=args.laplacian_weight,
         )
         all_runs["dawin"].append(metrics)
         print(

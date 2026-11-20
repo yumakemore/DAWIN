@@ -92,6 +92,19 @@ class DAWINLinear(nn.Module):
             return torch.zeros_like(self.raw_gamma)
         return F.softplus(self.raw_gamma) + self.gamma_min
 
+    def laplacian_penalty(self) -> torch.Tensor:
+        k = getattr(self, "k", getattr(self, "wavevector", getattr(self, "wavenumber", None)))
+        if k is None:
+            k = next(p for p in self.parameters() if p.ndim == 2)
+        k2 = k.float().pow(2).sum(dim=-1)
+        if hasattr(self, "amp"):
+            a = self.amp.float() if isinstance(self.amp, torch.Tensor) else self.amp().float()
+        elif hasattr(self, "raw_amp"):
+            a = torch.nn.functional.softplus(self.raw_amp.float())
+        else:
+            a = torch.ones_like(k2)
+        return (a.pow(2) * k2.pow(2)).mean()
+
     def forward(
         self,
         x: torch.Tensor,
@@ -175,3 +188,8 @@ class DAWINLinear(nn.Module):
 
         out = p if self.mode == "real" else torch.cat([p, q], dim=-1)
         return out.to(orig_dtype)
+
+
+def compute_dawin_laplacian_loss(model: nn.Module) -> torch.Tensor:
+    pens = [mod.laplacian_penalty() for mod in model.modules() if isinstance(mod, DAWINLinear)]
+    return torch.stack(pens).mean() if pens else torch.zeros((), device=next(model.parameters()).device, dtype=torch.float32)
