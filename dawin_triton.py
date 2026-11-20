@@ -86,8 +86,9 @@ def dawin_reference_forward(
     theta_f = theta.view(1, 1, -1).float()
 
     phi = z_f - dt_f * omega_f - theta_f
-    u_re = amp_f * torch.cos(phi)
-    u_im = amp_f * torch.sin(phi)
+    zoh = torch.where(dt_f > 0.0, 1.0 - torch.exp(-gamma_f * dt_f), torch.ones_like(dt_f))
+    u_re = (amp_f * zoh) * torch.cos(phi)
+    u_im = (amp_f * zoh) * torch.sin(phi)
 
     decay = torch.exp(-gamma_f * dt_f)
     if reset_mask is not None:
@@ -179,8 +180,9 @@ if HAS_TRITON:
 
         # Atomic spatiotemporal wave excitation (Eq. 1)
         phi = z_val - dt_val * omega - theta
-        u_re = tl.where(valid, amp * tl.cos(phi), 0.0)
-        u_im = tl.where(valid, amp * tl.sin(phi), 0.0)
+        zoh = tl.where(dt_val > 0.0, 1.0 - tl.exp(-gamma * dt_val), 1.0)
+        u_re = tl.where(valid, (amp * zoh) * tl.cos(phi), 0.0)
+        u_im = tl.where(valid, (amp * zoh) * tl.sin(phi), 0.0)
 
         # Damper evolution operator D_m(dt) (Eq. 2); identity (1, 0) for padded positions
         decay = tl.exp(-gamma * dt_val)
@@ -503,8 +505,9 @@ if HAS_TRITON:
         phi = z_val - dt_val * omega - theta
         cos_phi = tl.cos(phi)
         sin_phi = tl.sin(phi)
-        u_re = amp * cos_phi
-        u_im = amp * sin_phi
+        zoh = tl.where(dt_val > 0.0, 1.0 - tl.exp(-gamma * dt_val), 1.0)
+        u_re = (amp * zoh) * cos_phi
+        u_im = (amp * zoh) * sin_phi
 
         # Total forward state psi_i = p_i + i * q_i
         p_curr = tl.load(P_OUT_ptr + z_offset, mask=valid, other=0.0).to(tl.float32)
@@ -524,14 +527,18 @@ if HAS_TRITON:
 
         # Eq. (8): dL/dgamma = -dt_i * Re(delta_bar * D(dt_i) * psi_{i-1})
         re_db_carry = tl.where(valid, db_re * carry_fwd_re - db_im * carry_fwd_im, 0.0)
-        g_gamma_t = -dt_val * re_db_carry
+        dzoh_dg = tl.where(dt_val > 0.0, dt_val * tl.exp(-gamma * dt_val), 0.0)
+        re_db_unit = tl.where(valid, db_re * cos_phi - db_im * sin_phi, 0.0)
+        g_gamma_t = -dt_val * re_db_carry + amp * dzoh_dg * re_db_unit
 
         # Eq. (9): dL/domega = dt_i * Im(delta_bar * psi_i)
         im_db_psi = tl.where(valid, db_re * q_curr + db_im * p_curr, 0.0)
         g_omega_t = dt_val * im_db_psi
 
         # dL/ddt_i = -gamma * Re(delta_bar * carry_fwd) - omega * Im(delta_bar * psi_i)
-        g_dt_t = tl.where(valid, -gamma * re_db_carry + omega * im_db_psi, 0.0)
+        dzoh_ddt = tl.where(dt_val > 0.0, gamma * tl.exp(-gamma * dt_val), 0.0)
+        re_db_unit = tl.where(valid, db_re * cos_phi - db_im * sin_phi, 0.0)
+        g_dt_t = tl.where(valid, -gamma * re_db_carry + omega * im_db_psi + amp * dzoh_ddt * re_db_unit, 0.0)
 
         # Write pointwise gradients
         tl.store(GZ_ptr + z_offset, g_z_t, mask=valid)
@@ -791,7 +798,7 @@ class TritonDAWINLinear(nn.Module):
         out_features: int,
         mode: str = "quad",
         gamma_min: float = 1e-4,
-        omega_init_max: float = 0.5,
+        omega_init_max: float = 2.0 * math.pi,
         use_triton: bool = True,
         use_parallel_scan: bool = True,
         chunk_size: int = 2048,

@@ -53,7 +53,7 @@ class DAWINLinear(nn.Module):
         out_features: int,
         mode: str = "quad",
         gamma_min: float = 1e-4,
-        omega_init_max: float = 0.5,
+        omega_init_max: float = 2.0 * math.pi,
         use_parallel_scan: bool = True,
         ablation: str = "none",
     ):
