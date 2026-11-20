@@ -85,7 +85,7 @@ def dawin_reference_forward(
     omega_f = omega.view(1, 1, -1).float()
     theta_f = theta.view(1, 1, -1).float()
 
-    phi = z_f - dt_f * omega_f - theta_f
+    phi = z_f - theta_f
     zoh = torch.where(dt_f > 0.0, 1.0 - torch.exp(-gamma_f * dt_f), torch.ones_like(dt_f))
     u_re = (amp_f * zoh) * torch.cos(phi)
     u_im = (amp_f * zoh) * torch.sin(phi)
@@ -179,7 +179,7 @@ if HAS_TRITON:
         dt_val = tl.load(DT_ptr + dt_offset, mask=valid, other=0.0).to(tl.float32)
 
         # Atomic spatiotemporal wave excitation (Eq. 1)
-        phi = z_val - dt_val * omega - theta
+        phi = z_val - theta
         zoh = tl.where(dt_val > 0.0, 1.0 - tl.exp(-gamma * dt_val), 1.0)
         u_re = tl.where(valid, (amp * zoh) * tl.cos(phi), 0.0)
         u_im = tl.where(valid, (amp * zoh) * tl.sin(phi), 0.0)
@@ -502,7 +502,7 @@ if HAS_TRITON:
         z_val = tl.load(Z_ptr + z_offset, mask=valid, other=0.0).to(tl.float32)
         dt_val = tl.load(DT_ptr + dt_offset, mask=valid, other=0.0).to(tl.float32)
 
-        phi = z_val - dt_val * omega - theta
+        phi = z_val - theta
         cos_phi = tl.cos(phi)
         sin_phi = tl.sin(phi)
         zoh = tl.where(dt_val > 0.0, 1.0 - tl.exp(-gamma * dt_val), 1.0)
@@ -532,13 +532,13 @@ if HAS_TRITON:
         g_gamma_t = -dt_val * re_db_carry + amp * dzoh_dg * re_db_unit
 
         # Eq. (9): dL/domega = dt_i * Im(delta_bar * psi_i)
-        im_db_psi = tl.where(valid, db_re * q_curr + db_im * p_curr, 0.0)
-        g_omega_t = dt_val * im_db_psi
+        im_db_carry = tl.where(valid, db_re * carry_fwd_im + db_im * carry_fwd_re, 0.0)
+        g_omega_t = dt_val * im_db_carry
 
         # dL/ddt_i = -gamma * Re(delta_bar * carry_fwd) - omega * Im(delta_bar * psi_i)
         dzoh_ddt = tl.where(dt_val > 0.0, gamma * tl.exp(-gamma * dt_val), 0.0)
         re_db_unit = tl.where(valid, db_re * cos_phi - db_im * sin_phi, 0.0)
-        g_dt_t = tl.where(valid, -gamma * re_db_carry + omega * im_db_psi + amp * dzoh_ddt * re_db_unit, 0.0)
+        g_dt_t = tl.where(valid, -gamma * re_db_carry + omega * im_db_carry + amp * dzoh_ddt * re_db_unit, 0.0)
 
         # Write pointwise gradients
         tl.store(GZ_ptr + z_offset, g_z_t, mask=valid)

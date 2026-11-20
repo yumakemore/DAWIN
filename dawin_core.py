@@ -148,7 +148,7 @@ class DAWINLinear(nn.Module):
             u_re = inj_scale * amp * torch.cos(phi)
             u_im = inj_scale * amp * torch.sin(phi)
         else:
-            phi = F.linear(x_f, self.k.float()) - dt_f * omega - theta
+            phi = F.linear(x_f, self.k.float()) - theta
             u_re = amp * torch.cos(phi)
             u_im = amp * torch.sin(phi)
 
