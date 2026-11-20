@@ -36,7 +36,7 @@ from dawin_models import (
     MatchedReLUMLP,
     MatchedS5,
     MatchedTimeTransformer,
-    count_parameters,
+    count_trainable_parameters,
     find_matched_width,
 )
 
@@ -92,16 +92,16 @@ def _build_b200_profile_models(
         return int(res[0]) if isinstance(res, tuple) else int(res)
 
     ref_mlp = DAWINMLP(d_in, d_out, ref_width, num_layers=num_layers, use_parallel_scan=True)
-    target_params = count_parameters(ref_mlp)
+    target_params = count_trainable_parameters(ref_mlp)
 
     ref_serial = DAWINMLP(d_in, d_out, ref_width, num_layers=num_layers, use_parallel_scan=False)
     dawin_tf = DAWINTransformer(d_in, d_out, ref_width, num_layers=num_layers, use_parallel_scan=True)
 
-    w_relu = _w(find_matched_width(lambda w: MatchedReLUMLP(d_in, d_out, w, num_layers=num_layers), target_params))
-    w_tf = _w(find_matched_width(lambda w: MatchedTimeTransformer(d_in, d_out, max(16, (w // 4) * 4), num_layers=num_layers), target_params))
-    w_s5 = _w(find_matched_width(lambda w: MatchedS5(d_in, d_out, w, num_layers=num_layers), target_params))
-    w_mamba = _w(find_matched_width(lambda w: MatchedMamba(d_in, d_out, w, num_layers=num_layers), target_params))
-    w_cde = _w(find_matched_width(lambda w: MatchedNeuralCDE(d_in, d_out, w, num_layers=num_layers), target_params))
+    w_relu = _w(find_matched_width(target_params, lambda w: MatchedReLUMLP(d_in, d_out, w, num_layers=num_layers)))
+    w_tf = _w(find_matched_width(target_params, lambda w: MatchedTimeTransformer(d_in, d_out, max(16, (w // 4) * 4), num_layers=num_layers)))
+    w_s5 = _w(find_matched_width(target_params, lambda w: MatchedS5(d_in, d_out, w, num_layers=num_layers)))
+    w_mamba = _w(find_matched_width(target_params, lambda w: MatchedMamba(d_in, d_out, w, num_layers=num_layers)))
+    w_cde = _w(find_matched_width(target_params, lambda w: MatchedNeuralCDE(d_in, d_out, w, num_layers=num_layers)))
 
     return {
         "DAWIN_MLP_Parallel": ref_mlp,
@@ -166,7 +166,7 @@ def run_b200_profile(
 
                 model = model.to(device)
                 model.train(profile_backward)
-                params = count_parameters(model)
+                params = count_trainable_parameters(model)
 
                 try:
                     if device.type == "cuda":
