@@ -465,7 +465,7 @@ def train_single_seed(
 
     # RQ4: Inference throughput & peak GPU memory under active precision policy
     seq_len = int(meta["seq_len"])
-    meta["laplacian_weight"] = float(args.laplacian_weight)
+    meta["laplacian_weight"] = float(laplacian_weight)
     d_in = int(meta["d_in"])
     with autocast_context(device, amp_dtype):
         prof = profile_inference_efficiency(
