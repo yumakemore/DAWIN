@@ -798,7 +798,7 @@ class TritonDAWINLinear(nn.Module):
         out_features: int,
         mode: str = "quad",
         gamma_min: float = 1e-4,
-        omega_init_max: float = 2.0 * math.pi,
+        omega_init_max: float = math.pi,
         use_triton: bool = True,
         use_parallel_scan: bool = True,
         chunk_size: int = 2048,

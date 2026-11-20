@@ -35,7 +35,7 @@ def build_dawin_layer(
     use_parallel_scan: bool = True,
     use_triton: bool = True,
     gamma_min: float = 1e-4,
-    omega_init_max: float = 2.0 * math.pi,
+    omega_init_max: float = math.pi,
 ) -> nn.Module:
     """
     Factory returning TritonDAWINLinear when Triton is available and requested
