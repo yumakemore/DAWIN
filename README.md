@@ -52,7 +52,7 @@ python verify_triton_dawin.py
 
 ---
 
-## Interactively Run
+## Interactive Run
 
 ### Google Colab Notebook: DAWIN_10seed.ipynb
 
