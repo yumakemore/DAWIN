@@ -95,15 +95,22 @@ class DAWINLinear(nn.Module):
     def laplacian_penalty(self) -> torch.Tensor:
         k = getattr(self, "k", getattr(self, "wavevector", getattr(self, "wavenumber", None)))
         if k is None:
-            k = next(p for p in self.parameters() if p.ndim == 2)
+            k = next(param for param in self.parameters() if param.ndim == 2)
         k2 = k.float().pow(2).sum(dim=-1)
+        w2 = self.omega.float().pow(2) if hasattr(self, "omega") else torch.zeros_like(k2)
+        if hasattr(self, "raw_gamma"):
+            g = torch.nn.functional.softplus(self.raw_gamma.float()) + float(getattr(self, "gamma_min", 1e-4))
+        elif hasattr(self, "gamma"):
+            g = self.gamma.float() if isinstance(self.gamma, torch.Tensor) else self.gamma().float()
+        else:
+            g = torch.zeros_like(k2)
         if hasattr(self, "amp"):
             a = self.amp.float() if isinstance(self.amp, torch.Tensor) else self.amp().float()
         elif hasattr(self, "raw_amp"):
             a = torch.nn.functional.softplus(self.raw_amp.float())
         else:
             a = torch.ones_like(k2)
-        return (a.pow(2) * k2.pow(2)).mean()
+        return (a.pow(2) * (k2 + w2 + g.pow(2)).pow(2)).mean()
 
     def forward(
         self,
