@@ -101,7 +101,7 @@ def _build_b200_profile_models(
     w_tf = _w(find_matched_width(target_params, lambda w: MatchedTimeTransformer(d_in, d_out, max(16, (w // 4) * 4), num_layers=num_layers)))
     w_s5 = _w(find_matched_width(target_params, lambda w: MatchedS5(d_in, d_out, w, num_layers=num_layers)))
     w_mamba = _w(find_matched_width(target_params, lambda w: MatchedMamba(d_in, d_out, w, num_layers=num_layers)))
-    w_cde = _w(find_matched_width(target_params, lambda w: MatchedNeuralCDE(d_in, d_out, w, num_layers=num_layers)))
+    w_cde = _w(find_matched_width(target_params, lambda w: MatchedNeuralCDE(d_in, d_out, w)))
 
     return {
         "DAWIN_MLP_Parallel": ref_mlp,
