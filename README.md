@@ -54,35 +54,6 @@ python verify_triton_dawin.py
 
 ## Reproducing Paper Experiments
 
-### Interactive Google Colab Notebook (`DAWIN_10seed.ipynb`)
-[![Open In Colab](https://google.com)](https://google.com)
+### Interactive Google Colab Notebook: DAWIN_10seed.ipynb
 
-For interactive, cell-by-cell execution on cloud GPUs (`A100`, `G4`, or `L4`), open [`DAWIN_10seed.ipynb`](DAWIN_10seed.ipynb) in Google Colab:
-* **Persistent Drive Checkpointing:** Mounts Google Drive (`/content/drive/MyDrive/DAWIN_results`) so every completed task is saved immediately and automatically skipped if a runtime disconnects.
-* **Isolated Per-Task Cells:** Runs each of the 11 benchmark tasks and the RQ4 GPU scaling profiler in standalone cells to stay well within GPU session quotas.
-* **Automated Compilation:** Consolidates all 11 tasks into `master_benchmark_summary_fp32.json`, exports NeurIPS `booktabs` `.tex` tables, and renders `.pdf`/`.png` figures in the final cell.
-
-### 1. Full 11-Task 10-Seed Benchmark Sweep + RQ4 B200 Profiling
-Runs RQ4 GPU scaling across batch sizes `1, 16, 256, 4096`, executes all 11 ten-seed (`101`–`110`) parameter-matched sweeps, and automatically exports NeurIPS `.tex` tables and `.pdf`/`.png` figures:
-
-```bash
-python run_all_dawin_benchmarks.py --profile-b200 --precision bf16 --venue neurips --device cuda:0
-```
-
-### 2. Standalone RQ4 NVIDIA B200 Throughput & Memory Profiling
-```bash
-python run_all_dawin_benchmarks.py --profile-only --precision bf16 --venue neurips --device cuda:0
-```
-
-### 3. Single-Task 10-Seed Sweep
-```bash
-python run_dawin_experiments.py --backbone mlp --task HalfCheetah-v5 --precision bf16
-python run_dawin_experiments.py --backbone transformer --task PhysioNet2012-mortality --precision bf16
-python run_dawin_experiments.py --backbone mlp --task ETH_UCY_JAAD-position --precision bf16
-```
-
-### 4. Standalone LaTeX Table Export & Figure Compilation
-```bash
-python export_dawin_latex_tables.py --results-dir results_dawin --precision bf16 --venue neurips --output results_dawin/dawin_neurips_tables_bf16.tex
-python plot_dawin_figures.py --results-dir results_dawin --precision bf16 --formats pdf png
-```
+For interactive, cell-by-cell execution on cloud GPUs (`A100`, `G4`, or `L4`), use DAWIN_10seed.ipynb in your Google Colab.
