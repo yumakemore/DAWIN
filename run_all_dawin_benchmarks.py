@@ -321,7 +321,7 @@ def consolidate_master_reports(
     flat_rows: List[Dict[str, Any]] = []
 
     for job in jobs:
-        summary_file = results_dir / f"{job.backbone}_{job.task}_{precision}.json"
+        summary_file = results_dir / f"{job.backbone}_{job.task}_{precision}_results.json"
         if not summary_file.exists():
             continue
         with open(summary_file, "r", encoding="utf-8") as f:
