@@ -144,15 +144,15 @@ MODEL_STYLES: Dict[str, Dict[str, Any]] = {
 TASK_DISPLAY_NAMES: Dict[str, str] = {
     "damped_oscillator": "Damped Oscillator",
     "dt_irrelevant": r"$\Delta t$-Irrelevant Control",
-    "mujoco_halfcheetah": "HalfCheetah-v5",
-    "mujoco_hopper": "Hopper-v5 (L=4)",
-    "mujoco_reacher": "Reacher-v5",
-    "mujoco_walker2d": "Walker2d-v5",
-    "physionet_mortality": "PhysioNet-12 (Mortality)",
-    "physionet_imputation": "PhysioNet-12 (Imputation)",
-    "physionet_dense_wsp": "PhysioNet-12 (Dense)",
-    "eth_ucy_jaad_pos": "ETH/UCY+JAAD (Pos-Only)",
-    "eth_ucy_jaad_motion": "ETH/UCY+JAAD (Motion)",
+    "HalfCheetah-v5": "HalfCheetah-v5",
+    "Hopper-v5": "Hopper-v5 (L=4)",
+    "Reacher-v5": "Reacher-v5",
+    "Walker2d-v5": "Walker2d-v5",
+    "PhysioNet2012-mortality": "PhysioNet-12 (Mortality)",
+    "PhysioNet2012-imputation": "PhysioNet-12 (Imputation)",
+    "PhysioNet2012-dense": "PhysioNet-12 (Dense)",
+    "ETH_UCY_JAAD-position": "ETH/UCY+JAAD (Pos-Only)",
+    "ETH_UCY_JAAD-motion": "ETH/UCY+JAAD (Motion)",
 }
 
 
@@ -216,13 +216,41 @@ def save_figure(fig: plt.Figure, out_dir: Path, stem: str, formats: List[str], d
 # Figure 1: Main Parameter-Matched Accuracy Comparison (RQ1 & RQ2)
 # =============================================================================
 
+def _normalize_tasks_dict(master_data: Dict[str, Any]) -> Dict[str, Any]:
+    raw_tasks = master_data.get("tasks", {})
+    if isinstance(raw_tasks, dict):
+        return raw_tasks
+    if isinstance(raw_tasks, list):
+        out: Dict[str, Any] = {}
+        for item in raw_tasks:
+            t_key = item.get("task", "unknown")
+            entry = dict(item)
+            entry.setdefault("metric_name", item.get("metric", "Test Metric"))
+            inner = item.get("summary", {})
+            if isinstance(inner, dict) and isinstance(inner.get("summary"), list) and "models" not in entry:
+                models_d: Dict[str, Any] = {}
+                for row in inner["summary"]:
+                    m = row.get("model", "")
+                    m_copy = dict(row)
+                    if m == "dawin":
+                        m_copy["dt_interventions"] = {
+                            "shuffled": {"delta_mean": row.get("dt_shuf_delta", 0.0)},
+                            "constant": {"delta_mean": row.get("dt_const_delta", 0.0)},
+                        }
+                    models_d[m] = m_copy
+                entry["models"] = models_d
+            out[t_key] = entry
+        return out
+    return {}
+
+
 def plot_rq1_main_comparison(
     master_data: Dict[str, Any],
     out_dir: Path,
     formats: List[str],
     dpi: int = 300,
 ) -> List[Path]:
-    tasks_dict: Dict[str, Any] = master_data.get("tasks", {})
+    tasks_dict: Dict[str, Any] = _normalize_tasks_dict(master_data)
     if not tasks_dict:
         return []
 
@@ -306,7 +334,7 @@ def plot_rq3_dt_interventions(
     formats: List[str],
     dpi: int = 300,
 ) -> List[Path]:
-    tasks_dict: Dict[str, Any] = master_data.get("tasks", {})
+    tasks_dict: Dict[str, Any] = _normalize_tasks_dict(master_data)
     if not tasks_dict:
         return []
 
