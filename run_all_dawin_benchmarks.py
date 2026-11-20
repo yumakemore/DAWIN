@@ -491,6 +491,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--force",
         action="store_true",
+        default=True,
+    )
+    parser.add_argument(
+        "--no-force",
+        dest="force",
+        action="store_false",
         help="Re-run tasks even if summary JSON already exists.",
     )
     parser.add_argument(
