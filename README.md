@@ -54,6 +54,14 @@ python verify_triton_dawin.py
 
 ## Reproducing Paper Experiments
 
+### Interactive Google Colab Notebook (`DAWIN_10seed.ipynb`)
+[![Open In Colab](https://google.com)](https://google.com)
+
+For interactive, cell-by-cell execution on cloud GPUs (`A100`, `G4`, or `L4`), open [`DAWIN_10seed.ipynb`](DAWIN_10seed.ipynb) in Google Colab:
+* **Persistent Drive Checkpointing:** Mounts Google Drive (`/content/drive/MyDrive/DAWIN_results`) so every completed task is saved immediately and automatically skipped if a runtime disconnects.
+* **Isolated Per-Task Cells:** Runs each of the 11 benchmark tasks and the RQ4 GPU scaling profiler in standalone cells to stay well within GPU session quotas.
+* **Automated Compilation:** Consolidates all 11 tasks into `master_benchmark_summary_fp32.json`, exports NeurIPS `booktabs` `.tex` tables, and renders `.pdf`/`.png` figures in the final cell.
+
 ### 1. Full 11-Task 10-Seed Benchmark Sweep + RQ4 B200 Profiling
 Runs RQ4 GPU scaling across batch sizes `1, 16, 256, 4096`, executes all 11 ten-seed (`101`–`110`) parameter-matched sweeps, and automatically exports NeurIPS `.tex` tables and `.pdf`/`.png` figures:
 
