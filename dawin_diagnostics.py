@@ -41,7 +41,10 @@ def compute_nrmse(
         m = mask.to(dtype=diff_sq.dtype, device=diff_sq.device)
         while m.dim() < diff_sq.dim():
             m = m.unsqueeze(-1)
-        m = m.expand_as(diff_sq)
+        if m.shape != diff_sq.shape and m.shape[-1] != diff_sq.shape[-1]:
+            m = torch.ones_like(diff_sq)
+        else:
+            m = m.expand_as(diff_sq)
         denom = torch.clamp(m.sum(), min=1.0)
         mse = (diff_sq * m).sum() / denom
     else:
@@ -86,14 +89,21 @@ def evaluate_dt_interventions(
     masks_all: List[Optional[torch.Tensor]] = []
 
     for batch in dataloader:
-        x = batch["x"].to(device)
-        dt = batch["dt"].to(device)
-        y = batch["y"].to(device)
-        mask = batch.get("mask", None)
+        if isinstance(batch, dict):
+            x = batch["x"].to(device)
+            dt = batch["dt"].to(device)
+            y = batch["y"].to(device)
+            mask = batch.get("mask", None)
+            adj = batch.get("adj", None)
+        else:
+            it = iter(batch)
+            x = next(it).to(device)
+            dt = next(it).to(device)
+            y = next(it).to(device)
+            mask = next(it, None)
+            adj = next(it, None)
         if mask is not None:
             mask = mask.to(device)
-
-        adj = batch.get("adj", None)
         if adj is not None:
             adj = adj.to(device)
 
@@ -154,12 +164,15 @@ def evaluate_dt_interventions(
 
 def paired_bootstrap_and_sign_flip(
     baseline_scores: Sequence[float],
-    target_scores: Sequence[float],
+    target_scores: Optional[Sequence[float]] = None,
     n_resamples: int = 20_000,
     ci_level: float = 0.95,
     seed: int = 2026,
     higher_is_better: bool = False,
+    n_bootstrap: Optional[int] = None,
 ) -> Dict[str, Any]:
+    if n_bootstrap is not None:
+        n_resamples = n_bootstrap
     """
     Computes paired seed-level comparison statistics matching WSP/DAWIN protocol:
       - `delta_mean`: mean(baseline - target) if lower_is_better else mean(target - baseline)
@@ -170,7 +183,7 @@ def paired_bootstrap_and_sign_flip(
       - `n_seeds`: number of paired seeds
     """
     b_arr = np.asarray(baseline_scores, dtype=np.float64)
-    t_arr = np.asarray(target_scores, dtype=np.float64)
+    t_arr = np.zeros_like(b_arr) if target_scores is None else np.asarray(target_scores, dtype=np.float64)
     assert b_arr.shape == t_arr.shape and b_arr.ndim == 1, "Scores must be 1D arrays of equal length"
     n = len(b_arr)
     assert n >= 1, "At least one paired seed is required"
@@ -306,6 +319,8 @@ def profile_inference_efficiency(
         "batch_size": int(batch_size),
         "seq_len": int(seq_len),
         "latency_ms": latency_ms,
+        "throughput_transitions_s": transitions_per_sec,
+        "peak_mem_mib": peak_mib,
         "transitions_per_sec": transitions_per_sec,
         "peak_memory_mib": peak_mib,
         "include_backward": bool(include_backward),

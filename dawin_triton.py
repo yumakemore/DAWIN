@@ -211,7 +211,7 @@ if HAS_TRITON:
         tot_u_re = tl.sum(tl.where(is_last, scan_u_re, 0.0), axis=0)
         tot_u_im = tl.sum(tl.where(is_last, scan_u_im, 0.0), axis=0)
 
-        c_offset = b_idx * stride_cb + chunk_idx * stride_cm + m_idx
+        c_offset = b_idx * stride_cb + chunk_idx * stride_cc + m_idx * stride_cm
         tl.store(CHUNK_D_RE_ptr + c_offset, tot_d_re)
         tl.store(CHUNK_D_IM_ptr + c_offset, tot_d_im)
         tl.store(CHUNK_U_RE_ptr + c_offset, tot_u_re)
@@ -240,7 +240,7 @@ if HAS_TRITON:
         c_offs = tl.arange(0, SCAN_SIZE)
         valid = c_offs < N_CHUNKS
 
-        ptr_offs = b_idx * stride_cb + c_offs * stride_cm + m_idx
+        ptr_offs = b_idx * stride_cb + c_offs * stride_cc + m_idx * stride_cm
         d_re = tl.load(IN_D_RE_ptr + ptr_offs, mask=valid, other=1.0).to(tl.float32)
         d_im = tl.load(IN_D_IM_ptr + ptr_offs, mask=valid, other=0.0).to(tl.float32)
         u_re = tl.load(IN_U_RE_ptr + ptr_offs, mask=valid, other=0.0).to(tl.float32)
@@ -253,7 +253,7 @@ if HAS_TRITON:
         # Write inclusive state of chunk c as carry-in for chunk (c + 1)
         next_offs = c_offs + 1
         valid_next = next_offs < N_CHUNKS
-        next_ptr_offs = b_idx * stride_cb + next_offs * stride_cm + m_idx
+        next_ptr_offs = b_idx * stride_cb + next_offs * stride_cc + m_idx * stride_cm
         tl.store(CARRY_U_RE_ptr + next_ptr_offs, incl_u_re, mask=valid_next)
         tl.store(CARRY_U_IM_ptr + next_ptr_offs, incl_u_im, mask=valid_next)
 
@@ -290,7 +290,7 @@ if HAS_TRITON:
         b_idx = bm_idx // M
         m_idx = bm_idx % M
 
-        c_offset = b_idx * stride_cb + chunk_idx * stride_cm + m_idx
+        c_offset = b_idx * stride_cb + chunk_idx * stride_cc + m_idx * stride_cm
         carry_re = tl.load(CARRY_U_RE_ptr + c_offset).to(tl.float32)
         carry_im = tl.load(CARRY_U_IM_ptr + c_offset).to(tl.float32)
 
@@ -397,7 +397,7 @@ if HAS_TRITON:
             decay_next = decay_next * (1.0 - rst_next)
 
         # Conjugate rotation: +omega * dt_{t+1}
-        rot_next = omega * dt_next
+        rot_next = -omega * dt_next
         d_adj_re = tl.where(valid_next, decay_next * tl.cos(rot_next), 1.0)
         d_adj_im = tl.where(valid_next, decay_next * tl.sin(rot_next), 0.0)
 
@@ -416,7 +416,7 @@ if HAS_TRITON:
         tot_u_re = tl.sum(tl.where(is_last, scan_u_re, 0.0), axis=0)
         tot_u_im = tl.sum(tl.where(is_last, scan_u_im, 0.0), axis=0)
 
-        c_offset = b_idx * stride_cb + rev_chunk_idx * stride_cm + m_idx
+        c_offset = b_idx * stride_cb + rev_chunk_idx * stride_cc + m_idx * stride_cm
         tl.store(CHUNK_ADJ_D_RE_ptr + c_offset, tot_d_re)
         tl.store(CHUNK_ADJ_D_IM_ptr + c_offset, tot_d_im)
         tl.store(CHUNK_ADJ_U_RE_ptr + c_offset, tot_u_re)
@@ -457,7 +457,7 @@ if HAS_TRITON:
         omega = tl.load(OMEGA_ptr + m_idx).to(tl.float32)
         theta = tl.load(THETA_ptr + m_idx).to(tl.float32)
 
-        c_offset = b_idx * stride_cb + rev_chunk_idx * stride_cm + m_idx
+        c_offset = b_idx * stride_cb + rev_chunk_idx * stride_cc + m_idx * stride_cm
         carry_re = tl.load(CARRY_ADJ_RE_ptr + c_offset).to(tl.float32)
         carry_im = tl.load(CARRY_ADJ_IM_ptr + c_offset).to(tl.float32)
 
@@ -481,7 +481,7 @@ if HAS_TRITON:
                 m_next_offset = b_idx * stride_mb + t_next * stride_ml
                 rst_next = tl.load(MASK_ptr + m_next_offset, mask=valid_next, other=0.0).to(tl.float32)
                 decay_next = decay_next * (1.0 - rst_next)
-            rot_next = omega * dt_next
+            rot_next = -omega * dt_next
             d_adj_re = tl.where(valid_next, decay_next * tl.cos(rot_next), 1.0)
             d_adj_im = tl.where(valid_next, decay_next * tl.sin(rot_next), 0.0)
             zeros = tl.zeros_like(d_adj_re)
@@ -531,7 +531,7 @@ if HAS_TRITON:
         g_omega_t = dt_val * im_db_psi
 
         # dL/ddt_i = -gamma * Re(delta_bar * carry_fwd) - omega * Im(delta_bar * psi_i)
-        g_dt_t = tl.where(valid, -gamma * re_db_carry - omega * im_db_psi, 0.0)
+        g_dt_t = tl.where(valid, -gamma * re_db_carry + omega * im_db_psi, 0.0)
 
         # Write pointwise gradients
         tl.store(GZ_ptr + z_offset, g_z_t, mask=valid)
@@ -792,6 +792,10 @@ class TritonDAWINLinear(nn.Module):
         mode: str = "quad",
         gamma_min: float = 1e-4,
         omega_init_max: float = 2.0 * math.pi,
+        use_triton: bool = True,
+        use_parallel_scan: bool = True,
+        chunk_size: int = 2048,
+        **kwargs,
     ):
         super().__init__()
         if mode not in ("real", "quad"):
@@ -800,6 +804,9 @@ class TritonDAWINLinear(nn.Module):
         self.out_features = out_features
         self.mode = mode
         self.gamma_min = gamma_min
+        self.use_triton = use_triton
+        self.use_parallel_scan = use_parallel_scan
+        self.chunk_size = chunk_size
 
         self.k = nn.Parameter(torch.randn(out_features, in_features) / math.sqrt(in_features))
         self.theta = nn.Parameter(torch.zeros(out_features))
@@ -821,8 +828,13 @@ class TritonDAWINLinear(nn.Module):
         dt: torch.Tensor,
         reset_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        z = F.linear(x, self.k)
-        p, q = triton_dawin_scan(
-            z, dt, self.amplitude, self.gamma, self.omega, self.theta, reset_mask
-        )
+        z = F.linear(x.float(), self.k.float())
+        if self.use_triton and x.is_cuda:
+            p, q = triton_dawin_scan(
+                z, dt, self.amplitude, self.gamma, self.omega, self.theta, reset_mask
+            )
+        else:
+            p, q = dawin_reference_forward(
+                z, dt, self.amplitude, self.gamma, self.omega, self.theta, reset_mask
+            )
         return p if self.mode == "real" else torch.cat([p, q], dim=-1)

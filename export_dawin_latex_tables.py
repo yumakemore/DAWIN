@@ -97,7 +97,7 @@ def _fmt_mean_sd(mean: Optional[float], sd: Optional[float], decimals: int = 4, 
 def _fmt_ci(low: Optional[float], high: Optional[float], decimals: int = 4) -> str:
     if low is None or high is None or math.isnan(low) or math.isnan(high):
         return r"--"
-    return f"$[{low:.{decimals}f},\, {high:.{decimals}f}]$"
+    return f"$[{low:.{decimals}f},\\, {high:.{decimals}f}]$"
 
 
 def _fmt_p_value(p: Optional[float]) -> str:
@@ -115,16 +115,16 @@ def _venue_header_comment(venue: str) -> str:
     if venue_norm == "neurips":
         return (
             "% Formatted for NeurIPS (neurips_2025.sty / neurips_2026.sty)\n"
-            "% Required preamble packages: \usepackage{booktabs,multirow,amsmath,amssymb,graphicx}"
+            "% Required preamble packages: \\usepackage{booktabs,multirow,amsmath,amssymb,graphicx}"
         )
     if venue_norm == "iclr":
         return (
             "% Formatted for ICLR (iclr2026_conference.sty)\n"
-            "% Required preamble packages: \usepackage{booktabs,multirow,amsmath,amssymb,graphicx}"
+            "% Required preamble packages: \\usepackage{booktabs,multirow,amsmath,amssymb,graphicx}"
         )
     return (
         "% Formatted for ICML (icml2026.sty)\n"
-        "% Required preamble packages: \usepackage{booktabs,multirow,amsmath,amssymb,graphicx}"
+        "% Required preamble packages: \\usepackage{booktabs,multirow,amsmath,amssymb,graphicx}"
     )
 
 
@@ -166,7 +166,7 @@ def generate_main_benchmark_table(
         r"\begin{table*}[t]",
         r"\centering",
         r"\caption{\textbf{Main Parameter-Matched Benchmark Comparison (10 Final Seeds, $\pm$ SD).} "
-        r"All models share identical train/validation/test splits, early-stopping criteria, and parameter budgets within $\pm 2\%$. "
+        r"All models share identical train/validation/test splits, early-stopping criteria, and parameter budgets within $\pm 2\\%$. "
         r"\textbf{Bold} denotes best mean performance per task; \underline{underline} denotes runner-up. "
         r"$\Delta$ reports paired comparator-minus-DAWIN error ($\Delta > 0$ favors DAWIN on error metrics; inverted on AUROC). "
         r"$^*$ indicates $p < 0.05$ after Holm--Bonferroni correction across exact two-sided sign-flip tests.}",
@@ -174,7 +174,7 @@ def generate_main_benchmark_table(
         r"\resizebox{\textwidth}{!}{%",
         r"\begin{tabular}{llccccccc}",
         r"\toprule",
-        r"\textbf{Benchmark Task} & \textbf{Model} & \textbf{Width} & \textbf{Params} & \textbf{Val. Metric} & \textbf{Test Metric} & \textbf{Paired $\Delta$ (95\% CI)} & \textbf{Holm $p$} & \textbf{Wins} \\",
+        r"\textbf{Benchmark Task} & \textbf{Model} & \textbf{Width} & \textbf{Params} & \textbf{Val. Metric} & \textbf{Test Metric} & \textbf{Paired $\Delta$ (95\\% CI)} & \textbf{Holm $p$} & \textbf{Wins} \\",
         r"\midrule",
     ]
 
@@ -211,7 +211,7 @@ def generate_main_benchmark_table(
                 m_info = models_dict[m_key]
                 c_info = comps_dict.get(m_key, {})
 
-                task_col = f"\multirow{{{n_rows}}}{{*}}{{{task_label}}}" if r_i == 0 else ""
+                task_col = f"\\multirow{{{n_rows}}}{{*}}{{{task_label}}}" if r_i == 0 else ""
                 m_label = MODEL_DISPLAY_NAMES.get(m_key, m_key.replace("_", r"\_"))
                 width_str = str(m_info.get("width", r"--"))
                 params_val = m_info.get("params", m_info.get("num_params"))
@@ -287,7 +287,7 @@ def generate_timing_intervention_table(
         r"\label{tab:dawin_rq3_interventions}",
         r"\begin{tabular}{lcccc}",
         r"\toprule",
-        r"\textbf{Benchmark Task} & \textbf{Shuffled $\Delta t_{\text{perm}}$ Effect ($\pm$ SD)} & \textbf{95\% Bootstrap CI} & \textbf{Constant $\Delta t_{\text{const}}$ Effect ($\pm$ SD)} & \textbf{95\% Bootstrap CI} \\",
+        r"\textbf{Benchmark Task} & \textbf{Shuffled $\Delta t_{\text{perm}}$ Effect ($\pm$ SD)} & \textbf{95\\% Bootstrap CI} & \textbf{Constant $\Delta t_{\text{const}}$ Effect ($\pm$ SD)} & \textbf{95\\% Bootstrap CI} \\",
         r"\midrule",
     ]
 
@@ -343,7 +343,7 @@ def generate_b200_scaling_table(
         r"\caption{\textbf{RQ4 NVIDIA B200 GPU Inference Throughput, Latency, and Peak Allocated Memory Scaling.} "
         r"Measurements use synchronized CUDA events over 200 timed passes after 30 warmup iterations on resident tensors. "
         r"Throughput is reported in $10^6$ transitions/s ($B \cdot L / t_{\text{batch}}$); Peak Memory denotes PyTorch peak allocated VRAM (MiB). "
-        r"Speedup ($\times$) and Memory Saving (\%) are computed relative to each comparator at matched batch size and sequence length.}",
+        r"Speedup ($\times$) and Memory Saving (\\%) are computed relative to each comparator at matched batch size and sequence length.}",
         r"\label{tab:dawin_rq4_b200_scaling}",
         r"\resizebox{\textwidth}{!}{%",
         r"\begin{tabular}{cc l cccc}",
@@ -374,8 +374,8 @@ def generate_b200_scaling_table(
 
             n_grp = len(group_rows)
             for i_r, r in enumerate(group_rows):
-                l_col = f"\multirow{{{n_grp}}}{{*}}{{{seq_l:,}}}" if i_r == 0 else ""
-                b_col = f"\multirow{{{n_grp}}}{{*}}{{{batch_b:,}}}" if i_r == 0 else ""
+                l_col = f"\\multirow{{{n_grp}}}{{*}}{{{seq_l:,}}}" if i_r == 0 else ""
+                b_col = f"\\multirow{{{n_grp}}}{{*}}{{{batch_b:,}}}" if i_r == 0 else ""
                 m_raw = str(r.get("model", "unknown"))
                 m_label = MODEL_DISPLAY_NAMES.get(m_raw, m_raw.replace("_", r"\_"))
 
@@ -393,11 +393,11 @@ def generate_b200_scaling_table(
                 mem_str = f"${mem_mib:.2f}$" if mem_mib is not None else r"--"
 
                 if is_dawin_par:
-                    rel_str = r"\textit{Reference (1.00$\times$ / 0.0\%)}"
+                    rel_str = r"\textit{Reference (1.00$\times$ / 0.0\\%)}"
                 elif dawin_tp is not None and tp_m is not None and tp_m > 0 and dawin_mem is not None and mem_mib is not None and mem_mib > 0:
                     speedup = dawin_tp / float(tp_m)
                     mem_save = 100.0 * (1.0 - dawin_mem / float(mem_mib))
-                    rel_str = f"${speedup:.2f}\times$ / ${mem_save:+.1f}\%$"
+                    rel_str = f"${speedup:.2f}\times$ / ${mem_save:+.1f}\\%$"
                 else:
                     rel_str = r"--"
 

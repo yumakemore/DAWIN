@@ -42,7 +42,7 @@ from dawin_models import (
     MatchedReLUMLP,
     MatchedS5,
     MatchedTimeTransformer,
-    count_trainable_params,
+    count_trainable_parameters,
     find_matched_width,
 )
 
@@ -208,17 +208,17 @@ def build_dawin_model(
 ) -> nn.Module:
     if backbone == "mlp":
         return DAWINMLP(
-            d_in=d_in,
-            d_out=d_out,
-            hidden_dim=hidden_dim,
+            in_features=d_in,
+            out_features=d_out,
+            hidden_width=hidden_dim,
             num_layers=num_layers,
             ablation=ablation,
             use_parallel_scan=use_parallel_scan,
         )
     if backbone == "transformer":
         return DAWINTransformer(
-            d_in=d_in,
-            d_out=d_out,
+            in_features=d_in,
+            out_features=d_out,
             d_model=hidden_dim,
             nhead=4,
             num_layers=num_layers,
@@ -227,9 +227,9 @@ def build_dawin_model(
         )
     if backbone == "gnn":
         return DAWINGNN(
-            d_in=d_in,
-            d_out=d_out,
-            hidden_dim=hidden_dim,
+            in_features=d_in,
+            out_features=d_out,
+            hidden_width=hidden_dim,
             num_layers=num_layers,
             ablation=ablation,
             use_parallel_scan=use_parallel_scan,
@@ -248,26 +248,27 @@ def build_matched_comparator(
     Constructs a parameter-matched baseline within <= 2% of target_params.
     """
     builders: dict[str, Callable[[int], nn.Module]] = {
-        "relu_mlp": lambda w: MatchedReLUMLP(d_in=d_in, d_out=d_out, hidden_dim=w, num_layers=num_layers),
+        "relu_mlp": lambda w: MatchedReLUMLP(d_in, d_out, hidden_width=w, num_layers=num_layers),
         "time_transformer": lambda w: MatchedTimeTransformer(
-            d_in=d_in, d_out=d_out, d_model=max(16, (w // 4) * 4), nhead=4, num_layers=num_layers
+            d_in, d_out, d_model=max(16, (w // 2) * 2), nhead=2, num_layers=num_layers
         ),
-        "neural_cde": lambda w: MatchedNeuralCDE(d_in=d_in, d_out=d_out, hidden_dim=w),
-        "s5": lambda w: MatchedS5(d_in=d_in, d_out=d_out, d_model=w, num_layers=num_layers),
-        "mamba": lambda w: MatchedMamba(d_in=d_in, d_out=d_out, d_model=w, num_layers=num_layers),
-        "gru_gnn": lambda w: MatchedGRUGNN(d_in=d_in, d_out=d_out, hidden_dim=w, num_layers=num_layers),
+        "neural_cde": lambda w: MatchedNeuralCDE(d_in, d_out, hidden_width=w),
+        "s5": lambda w: MatchedS5(d_in, d_out, d_model=w, num_layers=num_layers),
+        "mamba": lambda w: MatchedMamba(d_in, d_out, d_model=w, num_layers=num_layers),
+        "gru_gnn": lambda w: MatchedGRUGNN(d_in, d_out, hidden_width=w, num_layers=num_layers),
     }
     if comp_name not in builders:
         raise ValueError(f"Unknown comparator '{comp_name}'.")
 
-    width, model = find_matched_width(
-        builder_fn=builders[comp_name],
-        target_params=target_params,
+    width, _, _ = find_matched_width(
+        target_params,
+        builders[comp_name],
         min_width=16,
         max_width=1024,
-        tol_pct=2.0,
+        max_rel_diff=0.025,
     )
-    actual_params = count_trainable_params(model)
+    model = builders[comp_name](width)
+    actual_params = count_trainable_parameters(model)
     rel_diff_pct = 100.0 * abs(actual_params - target_params) / max(target_params, 1)
     return model, width, rel_diff_pct
 
@@ -450,8 +451,8 @@ def train_single_seed(
     if task_type == "regression":
         with autocast_context(device, amp_dtype):
             dt_res = evaluate_dt_interventions(model, test_loader, device)
-        dt_shuf_delta = float(dt_res.get("shuffled_delta", 0.0))
-        dt_const_delta = float(dt_res.get("constant_delta", 0.0))
+        dt_shuf_delta = float(dt_res.get("delta_shuffled", dt_res.get("shuffled_delta", 0.0)))
+        dt_const_delta = float(dt_res.get("delta_constant", dt_res.get("constant_delta", 0.0)))
 
     # RQ4: Inference throughput & peak GPU memory under active precision policy
     seq_len = int(meta["seq_len"])
@@ -461,17 +462,18 @@ def train_single_seed(
             model=model,
             batch_size=256,
             seq_len=seq_len,
-            d_in=d_in,
+            in_features=d_in,
             device=device,
-            warmup=5,
-            repeats=20,
+            dtype=amp_dtype,
+            warmup_iters=5,
+            timed_iters=20,
         )
 
     return RunMetrics(
         model_name=model_name,
         seed=seed,
         precision=precision,
-        params=count_trainable_params(model),
+        params=count_trainable_parameters(model),
         rel_param_diff_pct=rel_param_diff_pct,
         best_epoch=best_epoch,
         val_metric=best_val,
@@ -506,16 +508,16 @@ def summarize_and_save_reports(
         comp_scores = np.array([r.test_metric for r in all_runs[comp]], dtype=np.float64)
         # Positive delta always favors DAWIN
         diffs = (dawin_scores - comp_scores) if higher_is_better else (comp_scores - dawin_scores)
-        res = paired_bootstrap_and_sign_flip(diffs, n_bootstrap=20000, seed=42)
+        res = paired_bootstrap_and_sign_flip(diffs, np.zeros_like(diffs), n_resamples=20000, seed=42)
         wins = int(np.sum(diffs > 0))
         stats_by_comp[comp] = {
             "delta_mean": float(np.mean(diffs)),
             "ci_low": float(res["ci_low"]),
             "ci_high": float(res["ci_high"]),
-            "p_raw": float(res["p_value"]),
+            "p_raw": float(res.get("p_value", res["exact_p"])),
             "dawin_wins": f"{wins}/{len(diffs)}",
         }
-        raw_pvals.append(float(res["p_value"]))
+        raw_pvals.append(float(res.get("p_value", res["exact_p"])))
 
     adj_pvals = holm_bonferroni(raw_pvals) if raw_pvals else []
     for comp, p_adj in zip(comparator_names, adj_pvals):
@@ -569,6 +571,7 @@ def summarize_and_save_reports(
             },
             f,
             indent=2,
+        default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o),
         )
 
     # 2. Save CSV
@@ -580,7 +583,7 @@ def summarize_and_save_reports(
 
     # 3. Save Markdown Table
     md_path = os.path.join(out_dir, f"{prefix}_table.md")
-    metric_label = meta["metric_name"]
+    metric_label = meta.get("metric_name", meta.get("metric", "score"))
     lines = [
         f"### DAWIN Unified Comparator Sweep (`{prefix}` | Precision: `{rows[0]['precision'].upper()}`)",
         "",
@@ -656,10 +659,15 @@ def main() -> None:
         train_loader, val_loader, test_loader, meta = generate_synthetic_irregular_data(task=args.task)
     elif HAS_BENCHMARK_DATASETS:
         bundle = get_benchmark_bundle(args.task)
-        train_loader = bundle["train_loader"]
-        val_loader = bundle["val_loader"]
-        test_loader = bundle["test_loader"]
-        meta = bundle["meta"]
+        train_loader, val_loader, test_loader = bundle.get_loaders(batch_size=256)
+        meta = dict(bundle.meta) if bundle.meta else {}
+        meta.setdefault("d_in", bundle.in_features)
+        meta.setdefault("d_out", bundle.out_features)
+        meta.setdefault("seq_len", bundle.seq_len)
+        meta.setdefault("pred_len", bundle.pred_len)
+        meta.setdefault("task_type", bundle.task_type)
+        meta.setdefault("stats", bundle.stats)
+        meta.setdefault("higher_is_better", bundle.task_type == "binary_classification")
     else:
         raise RuntimeError(f"Task '{args.task}' requires dawin_datasets.py to be importable.")
 
@@ -676,7 +684,7 @@ def main() -> None:
         ablation=args.ablation,
         use_parallel_scan=not args.no_parallel_scan,
     )
-    target_params = count_trainable_params(ref_dawin)
+    target_params = count_trainable_parameters(ref_dawin)
     print(f"Target DAWIN ({args.backbone}) parameter count: {target_params:,}")
 
     all_runs: dict[str, list[RunMetrics]] = {"dawin": []}

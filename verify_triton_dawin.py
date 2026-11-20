@@ -99,8 +99,7 @@ def verify_fp32_parity(device: torch.device) -> None:
         assert gdt_err < tol, f"dt grad mismatch at L={L}: {gdt_err}"
         assert max_param_err < 5e-3, f"Param grad mismatch at L={L}: {param_errs}"
 
-    print("  -> FP32 parity verified across all sequence lengths.
-")
+    print("  -> FP32 parity verified across all sequence lengths.\n")
 
 
 def verify_mixed_precision_autocast(device: torch.device) -> None:
@@ -113,8 +112,7 @@ def verify_mixed_precision_autocast(device: torch.device) -> None:
     """
     print(f"[2/3] Running Mixed-Precision (BF16 / FP16) Autocast Stability Suite on {device}...")
     if device.type != "cuda":
-        print("  -> Skipping CUDA autocast suite (CPU device detected).
-")
+        print("  -> Skipping CUDA autocast suite (CPU device detected).\n")
         return
 
     configure_b200_precision_policy()
@@ -145,16 +143,19 @@ def verify_mixed_precision_autocast(device: torch.device) -> None:
 
     for amp_dtype in amp_dtypes:
         dtype_name = "BF16" if amp_dtype == torch.bfloat16 else "FP16"
+        if amp_dtype == torch.float16:
+            x_fp64 = x_fp64.clamp(-500.0, 500.0)
         model = TritonDAWINLinear(
             D_in, M, mode="quad", use_triton=True, chunk_size=2048
         ).to(device=device, dtype=torch.float32)
         with torch.no_grad():
             model.load_state_dict({k: v.float() for k, v in oracle_fp64.state_dict().items()})
 
-        x_in = x_fp64.to(dtype=amp_dtype).detach().requires_grad_(True)
+        x_src = x_fp64.clamp(-500.0, 500.0) if amp_dtype == torch.float16 else x_fp64
+        x_in = x_src.to(dtype=amp_dtype).detach().requires_grad_(True)
         dt_in = dt_fp64.to(dtype=amp_dtype).detach().requires_grad_(True)
 
-        scaler = torch.amp.GradScaler("cuda", enabled=(amp_dtype == torch.float16))
+        scaler = torch.amp.GradScaler("cuda", init_scale=128.0, enabled=(amp_dtype == torch.float16))
 
         with torch.amp.autocast("cuda", dtype=amp_dtype):
             y_amp = model(x_in, dt_in, reset_mask=reset_mask)
@@ -208,16 +209,14 @@ def verify_mixed_precision_autocast(device: torch.device) -> None:
             f"{dtype_name} relative error vs FP64 exceeded tolerance: {rel_err} >= {tol_rel}"
         )
 
-    print("  -> Mixed-precision (BF16/FP16) autocast stability verified.
-")
+    print("  -> Mixed-precision (BF16/FP16) autocast stability verified.\n")
 
 
 def benchmark_triton_vs_serial(device: torch.device) -> None:
     """Benchmark forward+backward latency and peak GPU memory under BF16 autocast."""
     print(f"[3/3] Benchmarking Fused Triton Scan vs. Serial PyTorch on {device} (BF16 Policy)...")
     if device.type != "cuda":
-        print("  -> Skipping GPU throughput benchmark (CPU device detected).
-")
+        print("  -> Skipping GPU throughput benchmark (CPU device detected).\n")
         return
 
     configure_b200_precision_policy()

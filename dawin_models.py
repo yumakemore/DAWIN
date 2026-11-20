@@ -124,8 +124,8 @@ def find_matched_width(
 
 class DAWINMLP(nn.Module):
     """
-    Continuous-time MLP formed by replacing every Linear+ReLU block with
-    DAWINLinear (propagating paired-real quadratures across depth).
+    Continuous-time Pre-Norm Residual MLP formed by replacing every feed-forward
+    block with a LayerNorm -> DAWINLinear -> Linear residual block.
     """
     def __init__(
         self,
@@ -145,22 +145,21 @@ class DAWINMLP(nn.Module):
         self.num_layers = num_layers
         self.use_triton = use_triton
 
-        layers = []
-        d_in = in_features
-        for _ in range(num_layers):
-            layers.append(
-                build_dawin_layer(
-                    in_features=d_in,
-                    out_features=hidden_width,
-                    mode="quad",
-                    ablation=ablation,
-                    use_parallel_scan=use_parallel_scan,
-                    use_triton=use_triton,
-                )
+        d_model = 2 * hidden_width
+        self.in_proj = nn.Linear(in_features, d_model)
+        self.norms = nn.ModuleList([nn.LayerNorm(d_model) for _ in range(num_layers)])
+        self.layers = nn.ModuleList([
+            build_dawin_layer(
+                in_features=d_model,
+                out_features=hidden_width,
+                mode="quad",
+                ablation=ablation,
+                use_parallel_scan=use_parallel_scan,
             )
-            d_in = 2 * hidden_width
-        self.layers = nn.ModuleList(layers)
-        self.readout = nn.Linear(d_in, out_features)
+            for _ in range(num_layers)
+        ])
+        self.out_projs = nn.ModuleList([nn.Linear(2 * hidden_width, d_model) for _ in range(num_layers)])
+        self.readout = nn.Linear(d_model, out_features)
 
     def forward(
         self,
@@ -168,9 +167,9 @@ class DAWINMLP(nn.Module):
         dt: torch.Tensor,
         reset_mask: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        h = x
-        for layer in self.layers:
-            h = layer(h, dt, reset_mask=reset_mask)
+        h = self.in_proj(x)
+        for norm, layer, proj in zip(self.norms, self.layers, self.out_projs):
+            h = h + proj(layer(norm(h), dt, reset_mask=reset_mask))
         return self.readout(h)
 
 
@@ -201,8 +200,7 @@ class DAWINTransformerBlock(nn.Module):
             mode="quad",
             ablation=ablation,
             use_parallel_scan=use_parallel_scan,
-            use_triton=use_triton,
-        )
+                    )
         self.proj_out = nn.Linear(2 * dawin_width, d_model)
 
     def forward(
@@ -248,8 +246,7 @@ class DAWINTransformer(nn.Module):
                     dawin_width=dawin_width,
                     ablation=ablation,
                     use_parallel_scan=use_parallel_scan,
-                    use_triton=use_triton,
-                )
+                                    )
                 for _ in range(num_layers)
             ]
         )
@@ -299,8 +296,7 @@ class DAWINGNN(nn.Module):
                     mode="quad",
                     ablation=ablation,
                     use_parallel_scan=use_parallel_scan,
-                    use_triton=use_triton,
-                )
+                                    )
             )
             d_in = 2 * hidden_width
         self.node_evolvers = nn.ModuleList(layers)

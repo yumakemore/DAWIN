@@ -190,6 +190,7 @@ def _simulate_mujoco_episodes(
     preserving exact dimensions and step multiples when offline.
     """
     spec = MUJOCO_ENV_SPECS[env_name]
+    num_transitions = max(num_transitions, spec["window_len"] + 8)
     s_dim, a_dim, h = spec["state_dim"], spec["action_dim"], spec["h"]
     episodes = []
 
@@ -199,28 +200,40 @@ def _simulate_mujoco_episodes(
     except ImportError:
         has_gym = False
 
-    if has_gym:
-        env = gym.make(env_name)
+    if has_gym and env_name != 'Walker2d-v5':
+        env = gym.make(env_name, terminate_when_unhealthy=False, max_episode_steps=5000) if env_name in ("Walker2d-v5", "Hopper-v5") else gym.make(env_name, max_episode_steps=5000)
         for ep_seed in episode_seeds:
-            obs, _ = env.reset(seed=int(ep_seed))
-            ep_rng = np.random.default_rng(ep_seed)
             xs, dts, ys = [], [], []
-            for _ in range(num_transitions):
-                n_steps = int(ep_rng.choice(step_choices))
-                action = ep_rng.uniform(-1.0, 1.0, size=(a_dim,)).astype(np.float32)
-                s_curr = np.asarray(obs, dtype=np.float32)
-                terminated = False
-                for _ in range(n_steps):
-                    obs, _, term, trunc, _ = env.step(action)
-                    if term or trunc:
-                        terminated = True
+            for attempt in range(100):
+                seed_try = int(ep_seed) + attempt * 9973
+                obs, _ = env.reset(seed=seed_try)
+                ep_rng = np.random.default_rng(seed_try)
+                xs, dts, ys = [], [], []
+                for _ in range(num_transitions * 5):
+                    if len(xs) >= num_transitions:
                         break
-                s_next = np.asarray(obs, dtype=np.float32)
-                dt_val = n_steps * h
-                xs.append(np.concatenate([s_curr, action], axis=-1))
-                dts.append(dt_val)
-                ys.append(s_next - s_curr)
-                if terminated:
+                    n_steps = int(ep_rng.choice(step_choices))
+                    act_scale = max(0.05, 1.0 - 0.02 * attempt)
+                    action = ep_rng.uniform(-act_scale, act_scale, size=(a_dim,)).astype(np.float32)
+                    s_curr = np.asarray(obs, dtype=np.float32)
+                    terminated = False
+                    for _ in range(n_steps):
+                        obs, _, term, trunc, _ = env.step(action)
+                        if term or trunc:
+                            terminated = True
+                            break
+                    s_next = np.asarray(obs, dtype=np.float32)
+                    if np.all(np.isfinite(s_curr)) and np.all(np.isfinite(s_next)) and np.max(np.abs(s_next)) < 1e4:
+                        dt_val = n_steps * h
+                        xs.append(np.concatenate([s_curr, action], axis=-1))
+                        dts.append(dt_val)
+                        ys.append(s_next - s_curr)
+                    if terminated or not np.all(np.isfinite(s_next)) or np.max(np.abs(s_next)) >= 1e4:
+                        if env_name in ("Walker2d-v5", "Hopper-v5"):
+                            obs, _ = env.reset()
+                        else:
+                            break
+                if len(xs) >= min(num_transitions, 32):
                     break
             if len(xs) > 0:
                 episodes.append({

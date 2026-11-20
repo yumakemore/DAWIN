@@ -11,7 +11,7 @@ from dawin_models import (
     MatchedNeuralCDE,
     MatchedS5,
     MatchedMamba,
-    count_trainable_params,
+    count_trainable_parameters,
     find_matched_width,
 )
 
@@ -21,22 +21,23 @@ def main():
     x = torch.randn(B, L, d_in)
     dt = torch.rand(B, L) * 1.5 + 0.05
 
-    dawin = DAWINMLP(d_in=d_in, d_out=d_out, hidden_dim=128, num_layers=2)
-    target_p = count_trainable_params(dawin)
+    dawin = DAWINMLP(in_features=d_in, out_features=d_out, hidden_width=128, num_layers=2)
+    target_p = count_trainable_parameters(dawin)
     print(f"Reference DAWIN-MLP Params: {target_p:,}")
 
     comparators = {
-        "MatchedReLUMLP": lambda w: MatchedReLUMLP(d_in, d_out, hidden_dim=w, num_layers=2),
-        "MatchedTimeTransformer": lambda w: MatchedTimeTransformer(d_in, d_out, d_model=w * 4, nhead=4, num_layers=2),
-        "MatchedNeuralCDE": lambda w: MatchedNeuralCDE(d_in, d_out, hidden_dim=w),
+        "MatchedReLUMLP": lambda w: MatchedReLUMLP(d_in, d_out, hidden_width=w, num_layers=2),
+        "MatchedTimeTransformer": lambda w: MatchedTimeTransformer(d_in, d_out, d_model=w * 2, nhead=2, num_layers=2),
+        "MatchedNeuralCDE": lambda w: MatchedNeuralCDE(d_in, d_out, hidden_width=w),
         "MatchedS5": lambda w: MatchedS5(d_in, d_out, d_model=w, num_layers=2),
         "MatchedMamba": lambda w: MatchedMamba(d_in, d_out, d_model=w, num_layers=2),
     }
 
     for name, builder in comparators.items():
-        model, width, p_count, rel_err = find_matched_width(
-            builder, target_params=target_p, min_width=4, max_width=512, tolerance=0.02
+        width, p_count, rel_err = find_matched_width(
+            target_p, builder, min_width=4, max_width=512, max_rel_diff=0.02
         )
+        model = builder(width)
         out = model(x, dt)
         assert out.shape == (B, L, d_out), f"{name} shape mismatch: {out.shape}"
         loss = out.pow(2).mean()
