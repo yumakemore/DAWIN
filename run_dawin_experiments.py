@@ -321,6 +321,9 @@ def compute_loss_and_metric(
         loss = sq_err.sum() / mask.sum().clamp_min(1.0)
         return loss, float(loss.item())
 
+    if task_type == "trajectory" and pred.dim() == 3 and y.dim() == 3 and pred.shape != y.shape:
+        pred = pred[:, -1, :].view_as(y)
+
     # Default: sequence regression / trajectory displacement (MSE training, NRMSE eval)
     mse = nn.functional.mse_loss(pred, y)
     nrmse = float(torch.sqrt(mse).item())
@@ -356,6 +359,8 @@ def evaluate_loader(
             pred = model(x, dt)
         pred_f = pred.float()
         y_f = y.float()
+        if task_type == "trajectory" and pred_f.dim() == 3 and y_f.dim() == 3 and pred_f.shape != y_f.shape:
+            pred_f = pred_f[:, -1, :].view_as(y_f)
         if task_type == "masked_imputation" and mask is not None:
             m_f = mask.float()
             total_sq_err += float((((pred_f - y_f) ** 2) * m_f).sum().item())
@@ -448,7 +453,7 @@ def train_single_seed(
     # RQ3: Elapsed-time intervention diagnostics (regression / displacement tasks)
     dt_shuf_delta = 0.0
     dt_const_delta = 0.0
-    if task_type == "regression":
+    if task_type in {"regression", "trajectory"}:
         with autocast_context(device, amp_dtype):
             dt_res = evaluate_dt_interventions(model, test_loader, device)
         dt_shuf_delta = float(dt_res.get("delta_shuffled", dt_res.get("shuffled_delta", 0.0)))

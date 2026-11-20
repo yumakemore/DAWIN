@@ -108,9 +108,10 @@ def evaluate_dt_interventions(
             adj = adj.to(device)
 
         def _forward_with_dt(dt_mod: torch.Tensor) -> torch.Tensor:
-            if adj is not None:
-                return model(x, dt_mod, adj=adj)
-            return model(x, dt_mod)
+            out = model(x, dt_mod, adj=adj) if adj is not None else model(x, dt_mod)
+            if out.dim() == 3 and y.dim() == 3 and out.shape != y.shape:
+                out = out[:, -1, :].view_as(y)
+            return out
 
         # 1. True intervals
         out_true = _forward_with_dt(dt)

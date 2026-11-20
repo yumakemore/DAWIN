@@ -59,19 +59,19 @@ MODEL_DISPLAY_NAMES: Dict[str, str] = {
 TASK_DISPLAY_NAMES: Dict[str, str] = {
     "damped_oscillator": r"Damped Oscillator ($L=32$)",
     "dt_irrelevant": r"$\Delta t$-Irrelevant Control",
-    "mujoco_halfcheetah": r"HalfCheetah-v5",
-    "mujoco_hopper": r"Hopper-v5 ($L=4$)",
-    "mujoco_reacher": r"Reacher-v5",
-    "mujoco_walker2d": r"Walker2d-v5",
-    "physionet_mortality": r"PhysioNet-12 (Mortality)",
-    "physionet_imputation": r"PhysioNet-12 (Imputation)",
-    "physionet_dense_wsp": r"PhysioNet-12 (Dense)",
-    "eth_ucy_jaad_pos": r"ETH/UCY+JAAD (Pos-Only)",
-    "eth_ucy_jaad_motion": r"ETH/UCY+JAAD (Motion)",
+    "HalfCheetah-v5": r"HalfCheetah-v5",
+    "Hopper-v5": r"Hopper-v5 ($L=4$)",
+    "Reacher-v5": r"Reacher-v5",
+    "Walker2d-v5": r"Walker2d-v5",
+    "PhysioNet2012-mortality": r"PhysioNet-12 (Mortality)",
+    "PhysioNet2012-imputation": r"PhysioNet-12 (Imputation)",
+    "PhysioNet2012-dense": r"PhysioNet-12 (Dense)",
+    "ETH_UCY_JAAD-position": r"ETH/UCY+JAAD (Pos-Only)",
+    "ETH_UCY_JAAD-motion": r"ETH/UCY+JAAD (Motion)",
 }
 
 # Tasks where higher metric is better (e.g., AUROC / AUPRC / MRR)
-HIGHER_IS_BETTER_TASKS = {"physionet_mortality", "wikipedia_link", "reddit_link"}
+HIGHER_IS_BETTER_TASKS = {"PhysioNet2012-mortality", "wikipedia_link", "reddit_link"}
 
 
 def _fmt_float(val: Optional[float], decimals: int = 4) -> str:
@@ -133,7 +133,42 @@ def _extract_task_records(master_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     if isinstance(master_data, list):
         return master_data
     if "tasks" in master_data and isinstance(master_data["tasks"], list):
-        return master_data["tasks"]
+        normed = []
+        for entry in master_data["tasks"]:
+            rec = dict(entry)
+            inner = rec.get("summary", {})
+            if isinstance(inner, dict) and isinstance(inner.get("summary"), list) and "models" not in rec:
+                models_d, comps_d = {}, {}
+                for row in inner["summary"]:
+                    m = row.get("model", "")
+                    models_d[m] = row
+                    if m != "dawin":
+                        ci_txt = str(row.get("ci_95", ""))
+                        ci_lo, ci_hi = None, None
+                        if ci_txt.startswith("[") and "," in ci_txt:
+                            parts = ci_txt.strip("[]").split(",")
+                            ci_lo, ci_hi = float(parts[0]), float(parts[1])
+                        p_txt = str(row.get("holm_p", ""))
+                        holm_val = float(p_txt) if p_txt not in ("", "—", "--") else None
+                        wins_txt = str(row.get("dawin_wins", ""))
+                        w_num, n_s = (int(wins_txt.split("/")[0]), int(wins_txt.split("/")[1])) if "/" in wins_txt else (None, 10)
+                        comps_d[m] = {
+                            "delta_mean": row.get("delta_vs_dawin"),
+                            "ci_low": ci_lo,
+                            "ci_high": ci_hi,
+                            "holm_p": holm_val,
+                            "dawin_wins": w_num,
+                            "n_seeds": n_s,
+                        }
+                    else:
+                        rec["dt_interventions"] = {
+                            "shuffled": {"mean_diff": row.get("dt_shuf_delta"), "sd_diff": 0.0},
+                            "constant": {"mean_diff": row.get("dt_const_delta"), "sd_diff": 0.0},
+                        }
+                rec["models"] = models_d
+                rec["comparisons"] = comps_d
+            normed.append(rec)
+        return normed
     if "results" in master_data and isinstance(master_data["results"], dict):
         records = []
         for task_key, payload in master_data["results"].items():
@@ -369,8 +404,8 @@ def generate_b200_scaling_table(
                 (x for x in group_rows if "DAWIN" in str(x.get("model", "")) and "Serial" not in str(x.get("model", ""))),
                 None,
             )
-            dawin_tp = float(dawin_ref["throughput_m_per_s"]) if dawin_ref and "throughput_m_per_s" in dawin_ref else None
-            dawin_mem = float(dawin_ref["peak_mem_mib"]) if dawin_ref and "peak_mem_mib" in dawin_ref else None
+            dawin_tp = float(dawin_ref["throughput_m_trans_s"]) if dawin_ref and "throughput_m_trans_s" in dawin_ref else None
+            dawin_mem = float(dawin_ref["peak_memory_mib"]) if dawin_ref and "peak_memory_mib" in dawin_ref else None
 
             n_grp = len(group_rows)
             for i_r, r in enumerate(group_rows):
@@ -381,8 +416,8 @@ def generate_b200_scaling_table(
 
                 lat_ms = r.get("latency_ms", r.get("mean_ms"))
                 lat_sd = r.get("latency_sd_ms", 0.0)
-                tp_m = r.get("throughput_m_per_s")
-                mem_mib = r.get("peak_mem_mib")
+                tp_m = r.get("throughput_m_trans_s")
+                mem_mib = r.get("peak_memory_mib")
 
                 is_dawin_par = (dawin_ref is not None and r is dawin_ref)
                 lat_str = f"${lat_ms:.3f} \\pm {lat_sd:.3f}$" if lat_ms is not None else r"--"

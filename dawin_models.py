@@ -155,6 +155,7 @@ class DAWINMLP(nn.Module):
                 mode="quad",
                 ablation=ablation,
                 use_parallel_scan=use_parallel_scan,
+                use_triton=(use_triton and use_parallel_scan),
             )
             for _ in range(num_layers)
         ])
@@ -200,7 +201,8 @@ class DAWINTransformerBlock(nn.Module):
             mode="quad",
             ablation=ablation,
             use_parallel_scan=use_parallel_scan,
-                    )
+            use_triton=(use_triton and use_parallel_scan),
+        )
         self.proj_out = nn.Linear(2 * dawin_width, d_model)
 
     def forward(
@@ -246,7 +248,8 @@ class DAWINTransformer(nn.Module):
                     dawin_width=dawin_width,
                     ablation=ablation,
                     use_parallel_scan=use_parallel_scan,
-                                    )
+                    use_triton=(use_triton and use_parallel_scan),
+                )
                 for _ in range(num_layers)
             ]
         )
@@ -296,7 +299,8 @@ class DAWINGNN(nn.Module):
                     mode="quad",
                     ablation=ablation,
                     use_parallel_scan=use_parallel_scan,
-                                    )
+                    use_triton=(use_triton and use_parallel_scan),
+                )
             )
             d_in = 2 * hidden_width
         self.node_evolvers = nn.ModuleList(layers)
