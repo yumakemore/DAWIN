@@ -57,15 +57,15 @@ class BenchmarkJob:
 BENCHMARK_MANIFEST: List[BenchmarkJob] = [
     BenchmarkJob("synthetic", "damped_oscillator", "mlp", "NRMSE", False, 100, 256, 128, 2),
     BenchmarkJob("synthetic", "dt_irrelevant", "mlp", "NRMSE", False, 100, 256, 128, 2),
-    BenchmarkJob("mujoco", "mujoco_halfcheetah", "mlp", "NRMSE", False, 100, 256, 128, 2),
-    BenchmarkJob("mujoco", "mujoco_hopper", "mlp", "NRMSE", False, 100, 256, 128, 2),
-    BenchmarkJob("mujoco", "mujoco_reacher", "mlp", "NRMSE", False, 100, 256, 128, 2),
-    BenchmarkJob("mujoco", "mujoco_walker2d", "mlp", "NRMSE", False, 100, 256, 128, 2),
-    BenchmarkJob("physionet", "physionet_mortality", "transformer", "AUROC", True, 60, 128, 128, 2),
-    BenchmarkJob("physionet", "physionet_imputation", "transformer", "Masked_MSE", False, 60, 128, 128, 2),
-    BenchmarkJob("physionet", "physionet_dense_wsp", "transformer", "NRMSE", False, 80, 256, 128, 2),
-    BenchmarkJob("trajectories", "eth_ucy_jaad_pos", "mlp", "ADE", False, 80, 256, 128, 2),
-    BenchmarkJob("trajectories", "eth_ucy_jaad_motion", "mlp", "ADE", False, 80, 256, 128, 2),
+    BenchmarkJob("mujoco", "HalfCheetah-v5", "mlp", "NRMSE", False, 100, 256, 128, 2),
+    BenchmarkJob("mujoco", "Hopper-v5", "mlp", "NRMSE", False, 100, 256, 128, 2),
+    BenchmarkJob("mujoco", "Reacher-v5", "mlp", "NRMSE", False, 100, 256, 128, 2),
+    BenchmarkJob("mujoco", "Walker2d-v5", "mlp", "NRMSE", False, 100, 256, 128, 2),
+    BenchmarkJob("physionet", "PhysioNet2012-mortality", "transformer", "AUROC", True, 60, 128, 128, 2),
+    BenchmarkJob("physionet", "PhysioNet2012-imputation", "transformer", "Masked_MSE", False, 60, 128, 128, 2),
+    BenchmarkJob("physionet", "PhysioNet2012-dense", "transformer", "NRMSE", False, 80, 256, 128, 2),
+    BenchmarkJob("trajectories", "ETH_UCY_JAAD-position", "mlp", "ADE", False, 80, 256, 128, 2),
+    BenchmarkJob("trajectories", "ETH_UCY_JAAD-motion", "mlp", "ADE", False, 80, 256, 128, 2),
 ]
 
 
@@ -88,42 +88,30 @@ def _build_b200_profile_models(
     num_layers: int = 2,
 ) -> Dict[str, nn.Module]:
     """Constructs DAWIN and parameter-matched comparators for RQ4 B200 profiling."""
-    ref_mlp = DAWINMLP(d_in, ref_width, d_out, num_layers=num_layers, use_parallel_scan=True)
+    def _w(res):
+        return int(res[0]) if isinstance(res, tuple) else int(res)
+
+    ref_mlp = DAWINMLP(d_in, d_out, ref_width, num_layers=num_layers, use_parallel_scan=True)
     target_params = count_parameters(ref_mlp)
 
-    ref_serial = DAWINMLP(d_in, ref_width, d_out, num_layers=num_layers, use_parallel_scan=False)
-    dawin_tf = DAWINTransformer(d_in, ref_width, d_out, num_layers=num_layers, use_parallel_scan=True)
+    ref_serial = DAWINMLP(d_in, d_out, ref_width, num_layers=num_layers, use_parallel_scan=False)
+    dawin_tf = DAWINTransformer(d_in, d_out, ref_width, num_layers=num_layers, use_parallel_scan=True)
 
-    w_relu = find_matched_width(
-        lambda w: MatchedReLUMLP(d_in, w, d_out, num_layers=num_layers), target_params
-    )
-    w_tf = find_matched_width(
-        lambda w: MatchedTimeTransformer(d_in, max(16, (w // 4) * 4), d_out, num_layers=num_layers),
-        target_params,
-        low=16,
-        high=512,
-    )
-    w_s5 = find_matched_width(
-        lambda w: MatchedS5(d_in, w, d_out, num_layers=num_layers), target_params
-    )
-    w_mamba = find_matched_width(
-        lambda w: MatchedMamba(d_in, w, d_out, num_layers=num_layers), target_params
-    )
-    w_cde = find_matched_width(
-        lambda w: MatchedNeuralCDE(d_in, w, d_out, num_layers=num_layers), target_params
-    )
+    w_relu = _w(find_matched_width(lambda w: MatchedReLUMLP(d_in, d_out, w, num_layers=num_layers), target_params))
+    w_tf = _w(find_matched_width(lambda w: MatchedTimeTransformer(d_in, d_out, max(16, (w // 4) * 4), num_layers=num_layers), target_params))
+    w_s5 = _w(find_matched_width(lambda w: MatchedS5(d_in, d_out, w, num_layers=num_layers), target_params))
+    w_mamba = _w(find_matched_width(lambda w: MatchedMamba(d_in, d_out, w, num_layers=num_layers), target_params))
+    w_cde = _w(find_matched_width(lambda w: MatchedNeuralCDE(d_in, d_out, w, num_layers=num_layers), target_params))
 
     return {
         "DAWIN_MLP_Parallel": ref_mlp,
         "DAWIN_MLP_Serial": ref_serial,
         "DAWIN_Transformer": dawin_tf,
-        "ReLU_MLP": MatchedReLUMLP(d_in, w_relu, d_out, num_layers=num_layers),
-        "Time_Transformer": MatchedTimeTransformer(
-            d_in, max(16, (w_tf // 4) * 4), d_out, num_layers=num_layers
-        ),
-        "S5": MatchedS5(d_in, w_s5, d_out, num_layers=num_layers),
-        "Mamba": MatchedMamba(d_in, w_mamba, d_out, num_layers=num_layers),
-        "Neural_CDE": MatchedNeuralCDE(d_in, w_cde, d_out, num_layers=num_layers),
+        "ReLU_MLP": MatchedReLUMLP(d_in, d_out, w_relu, num_layers=num_layers),
+        "Time_Transformer": MatchedTimeTransformer(d_in, d_out, max(16, (w_tf // 4) * 4), num_layers=num_layers),
+        "S5": MatchedS5(d_in, d_out, w_s5, num_layers=num_layers),
+        "Mamba": MatchedMamba(d_in, d_out, w_mamba, num_layers=num_layers),
+        "Neural_CDE": MatchedNeuralCDE(d_in, d_out, w_cde, num_layers=num_layers),
     }
 
 
@@ -333,7 +321,7 @@ def consolidate_master_reports(
     flat_rows: List[Dict[str, Any]] = []
 
     for job in jobs:
-        summary_file = results_dir / f"{job.backbone}_{job.task}_{precision}_summary.json"
+        summary_file = results_dir / f"{job.backbone}_{job.task}_{precision}.json"
         if not summary_file.exists():
             continue
         with open(summary_file, "r", encoding="utf-8") as f:
@@ -349,25 +337,23 @@ def consolidate_master_reports(
         }
         master_tasks.append(task_entry)
 
-        models_dict = data.get("models", {})
-        for model_name, stats in models_dict.items():
+        for stats in data.get("summary", []):
             flat_rows.append(
                 {
                     "suite": job.suite,
                     "task": job.task,
                     "backbone": job.backbone,
                     "metric": job.metric_name,
-                    "model": model_name,
-                    "parameters": stats.get("parameters", 0),
+                    "model": stats.get("model", ""),
+                    "parameters": stats.get("params", stats.get("parameters", 0)),
                     "val_mean": stats.get("val_mean", float("nan")),
                     "val_sd": stats.get("val_sd", float("nan")),
                     "test_mean": stats.get("test_mean", float("nan")),
                     "test_sd": stats.get("test_sd", float("nan")),
                     "delta_vs_dawin": stats.get("delta_vs_dawin", 0.0),
-                    "ci_low": stats.get("ci_low", 0.0),
-                    "ci_high": stats.get("ci_high", 0.0),
-                    "holm_p": stats.get("holm_p", 1.0),
-                    "dawin_wins": stats.get("dawin_wins", "-"),
+                    "ci_95": stats.get("ci_95", "—"),
+                    "holm_p": stats.get("holm_p", "—"),
+                    "dawin_wins": stats.get("dawin_wins", "—"),
                 }
             )
 
@@ -397,11 +383,10 @@ def consolidate_master_reports(
             "|:---|:---|:---|:---|:---|---:|---:|---:|:---|---:|:---:|",
         ]
         for r in flat_rows:
-            ci_str = f"[{r['ci_low']:.4f}, {r['ci_high']:.4f}]"
             md_lines.append(
                 f"| {r['suite']} | {r['task']} | {r['backbone']} | {r['metric']} | {r['model']} | "
                 f"{r['parameters']:,} | {r['test_mean']:.4f} ± {r['test_sd']:.4f} | "
-                f"{r['delta_vs_dawin']:+.4f} | {ci_str} | {r['holm_p']:.4f} | {r['dawin_wins']} |"
+                f"{r['delta_vs_dawin']:+.4f} | {r['ci_95']} | {r['holm_p']} | {r['dawin_wins']} |"
             )
         with open(master_md, "w", encoding="utf-8") as f:
             f.write("\n".join(md_lines) + "\n")
@@ -576,7 +561,7 @@ def main() -> None:
     if not args.profile_only:
         print(f"\n[Batch Runner] Executing {len(selected_jobs)} benchmark tasks | Precision={args.precision}")
         for idx, job in enumerate(selected_jobs, start=1):
-            summary_path = results_dir / f"{job.backbone}_{job.task}_{args.precision}_summary.json"
+            summary_path = results_dir / f"{job.backbone}_{job.task}_{args.precision}.json"
             if summary_path.exists() and not args.force:
                 print(f"[{idx}/{len(selected_jobs)}] Skipping {job.task} (already exists: {summary_path})")
                 continue
@@ -595,19 +580,15 @@ def main() -> None:
                 args.precision,
                 "--epochs",
                 str(epochs),
-                "--batch-size",
-                str(batch_size),
-                "--width",
+                "--hidden-dim",
                 str(job.default_width),
                 "--num-layers",
                 str(job.default_layers),
-                "--results-dir",
+                "--out-dir",
                 str(results_dir),
                 "--seeds",
                 *[str(s) for s in args.seeds],
             ]
-            if args.device:
-                cmd.extend(["--device", args.device])
 
             print(f"\n[{idx}/{len(selected_jobs)}] Running {job.suite}/{job.task} ({job.backbone})...")
             if args.dry_run:
