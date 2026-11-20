@@ -156,7 +156,10 @@ def evaluate_dt_interventions(
     m_true = float(metric_fn(p_true, y_cat, m_eval))
     m_shuf = float(metric_fn(p_shuf, y_cat, m_eval))
     m_const = float(metric_fn(p_const, y_cat, m_eval))
-    m_zero = float(metric_fn(torch.cat(preds_zero, dim=0), y_cat, m_cat))
+    p_zero = torch.cat(preds_zero, dim=0)
+    if p_zero.dim() == 3 and y_cat.dim() == 3 and p_zero.shape != y_cat.shape:
+        p_zero = p_zero[:, -1, :].view_as(y_cat)
+    m_zero = float(metric_fn(p_zero, y_cat, m_eval))
 
     denom = max(abs(m_true), 1e-8)
     return {
