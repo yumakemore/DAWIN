@@ -198,5 +198,14 @@ class DAWINLinear(nn.Module):
 
 
 def compute_dawin_laplacian_loss(model: nn.Module) -> torch.Tensor:
-    pens = [mod.laplacian_penalty() for mod in model.modules() if isinstance(mod, DAWINLinear)]
+    pens = []
+    for mod in model.modules():
+        if hasattr(mod, "laplacian_penalty"):
+            pens.append(mod.laplacian_penalty())
+        elif hasattr(mod, "k") and hasattr(mod, "omega"):
+            k2 = mod.k.float().pow(2).sum(dim=-1)
+            w2 = mod.omega.float().pow(2)
+            g = (torch.nn.functional.softplus(mod.raw_gamma.float()) + float(getattr(mod, "gamma_min", 1e-4))) if hasattr(mod, "raw_gamma") else (mod.gamma.float() if hasattr(mod, "gamma") else torch.zeros_like(k2))
+            a = torch.nn.functional.softplus(mod.raw_amp.float()) if hasattr(mod, "raw_amp") else (mod.amp.float() if hasattr(mod, "amp") else torch.ones_like(k2))
+            pens.append((a.pow(2) * (k2 + w2 + g.pow(2)).pow(2)).mean())
     return torch.stack(pens).mean() if pens else torch.zeros((), device=next(model.parameters()).device, dtype=torch.float32)
