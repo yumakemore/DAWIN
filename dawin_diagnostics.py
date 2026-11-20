@@ -145,9 +145,17 @@ def evaluate_dt_interventions(
     y_cat = torch.cat(targets_all, dim=0)
     m_cat = torch.cat(masks_all, dim=0) if masks_all[0] is not None else None
 
-    m_true = float(metric_fn(torch.cat(preds_true, dim=0), y_cat, m_cat))
-    m_shuf = float(metric_fn(torch.cat(preds_shuf, dim=0), y_cat, m_cat))
-    m_const = float(metric_fn(torch.cat(preds_const, dim=0), y_cat, m_cat))
+    p_true = torch.cat(preds_true, dim=0)
+    p_shuf = torch.cat(preds_shuf, dim=0)
+    p_const = torch.cat(preds_const, dim=0)
+    if p_true.dim() == 3 and y_cat.dim() == 3 and p_true.shape != y_cat.shape:
+        p_true = p_true[:, -1, :].view_as(y_cat)
+        p_shuf = p_shuf[:, -1, :].view_as(y_cat)
+        p_const = p_const[:, -1, :].view_as(y_cat)
+    m_eval = None if (m_cat is not None and m_cat.shape[1] != y_cat.shape[1]) else m_cat
+    m_true = float(metric_fn(p_true, y_cat, m_eval))
+    m_shuf = float(metric_fn(p_shuf, y_cat, m_eval))
+    m_const = float(metric_fn(p_const, y_cat, m_eval))
     m_zero = float(metric_fn(torch.cat(preds_zero, dim=0), y_cat, m_cat))
 
     denom = max(abs(m_true), 1e-8)
