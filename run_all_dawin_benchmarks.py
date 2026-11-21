@@ -111,7 +111,7 @@ def _build_b200_profile_models(
         "Time_Transformer": MatchedTimeTransformer(d_in, d_out, max(16, (w_tf // 4) * 4), num_layers=num_layers),
         "S5": MatchedS5(d_in, d_out, w_s5, num_layers=num_layers),
         "Mamba": MatchedMamba(d_in, d_out, w_mamba, num_layers=num_layers),
-        "Neural_CDE": MatchedNeuralCDE(d_in, d_out, w_cde, num_layers=num_layers),
+        "Neural_CDE": MatchedNeuralCDE(d_in, d_out, w_cde),
     }
 
 
