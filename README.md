@@ -24,7 +24,7 @@ where $\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$
 ### Experiment Runners, Exporters & Plotting Scripts
 * `run_dawin_experiments.py`: Executes 10-seed (`101`–`110`) parameter-matched sweeps for a single task with configurable `--precision` (`fp32`, `bf16`, `fp16`) and writes `.json`, `.csv`, and `.md` summaries.
 * `run_all_dawin_benchmarks.py`: Orchestrates sequential 10-seed sweeps across all 11 benchmark tasks, runs the `--profile-b200` RQ4 GPU scaling suite, and automatically compiles LaTeX tables and publication figures.
-* `export_dawin_latex_tables.py`: Compiles `master_benchmark_summary_<precision>.json` and `rq4_b200_scaling_<precision>.json` into venue-agnostic (`generic`, outputting `dawin_tables_<precision>.tex`) or venue-specific (`neurips`, `iclr`, `icml`) `booktabs` `\begin{table*}` blocks.
+* `export_dawin_latex_tables.py`: Compiles `master_benchmark_summary_<precision>.json` and `rq4_b200_scaling_<precision>.json` into venue-agnostic (`generic`, outputting `dawin_tables_<precision>.tex`) or venue-specific (`neurips`, `iclr`, `icml`) LaTeX `booktabs` tables.
 * `plot_dawin_figures.py`: Renders publication-ready vector (`.pdf`) and raster (`.png`) figures for RQ1/RQ2 accuracy comparisons, RQ3 causal timing interventions, and RQ4 NVIDIA B200 GPU scaling curves.
 
 ### Verification Suites
@@ -66,6 +66,8 @@ For interactive, cell-by-cell execution on cloud GPUs (`B200`, `B100`, `G4`, `A1
 
 
 ## Reproducing Benchmarks & Tables
+
+All benchmark, profiling, and export commands default to saving outputs in `./results_dawin` (override with `--results-dir <PATH>` to write directly to persistent storage such as Google Drive or a cluster volume).
 
 ### 1. Full 11-Task 10-Seed Benchmark Sweep
 ```bash
