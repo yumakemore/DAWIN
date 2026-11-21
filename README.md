@@ -103,7 +103,7 @@ All benchmark, profiling, and export commands save outputs to `./results_dawin` 
 
 ### 1. Full 11-Task 10-Seed Benchmark Sweep
 ```bash
-python run_all_dawin_benchmarks.py --precision fp32 --laplacian-weight 1e-4 --device cuda:0
+python run_all_dawin_benchmarks.py --precision bf16 --laplacian-weight 1e-4 --device cuda:0
 ```
 
 ### 2. Standalone RQ4 GPU Throughput & Memory Profiling (BF16)
@@ -113,9 +113,9 @@ python run_all_dawin_benchmarks.py --profile-only --precision bf16 --device cuda
 
 ### 3. Single-Task 10-Seed Sweep & Manual Table/Figure Export
 ```bash
-python run_all_dawin_benchmarks.py --tasks HalfCheetah-v5 --precision fp32 --laplacian-weight 1e-4 --force
-python export_dawin_latex_tables.py --results-dir results_dawin --precision fp32 --venue generic
-python plot_dawin_figures.py --results-dir results_dawin --precision fp32 --formats pdf png
+python run_all_dawin_benchmarks.py --tasks HalfCheetah-v5 --precision bf16 --laplacian-weight 1e-4 --force
+python export_dawin_latex_tables.py --results-dir results_dawin --precision bf16 --venue generic
+python plot_dawin_figures.py --results-dir results_dawin --precision bf16 --formats pdf png
 ```
 
 ### Generated Output Artifacts
