@@ -517,8 +517,9 @@ if HAS_TRITON:
         carry_fwd_re = p_curr - u_re
         carry_fwd_im = q_curr - u_im
 
-        # Eq. (6): dL/dA = Re(delta_bar * e^{i phi})
-        g_amp_t = tl.where(valid, db_re * cos_phi - db_im * sin_phi, 0.0)
+        # Eq. (6): dL/dA = Re(delta_bar * zoh * e^{i phi})
+        zoh_amp = tl.where(dt_val > 0.0, 1.0 - tl.exp(-gamma * dt_val), 1.0)
+        g_amp_t = tl.where(valid, zoh_amp * (db_re * cos_phi - db_im * sin_phi), 0.0)
 
         # Eq. (6)-(7): Im(delta_bar * u_i) -> dL/dtheta and dL/dZ = -Im(delta_bar * u_i)
         im_db_u = tl.where(valid, db_re * u_im + db_im * u_re, 0.0)
