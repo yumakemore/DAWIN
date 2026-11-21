@@ -19,4 +19,6 @@ results_dawin/
 *.out
 *.synctex.gz
 .DS_Store
-
+results_dawin/
+DAWIN_results/
+DAWIN_paper/
