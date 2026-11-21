@@ -454,7 +454,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Export DAWIN JSON results to NeurIPS/ICLR/ICML LaTeX tables.")
     parser.add_argument("--results-dir", type=str, default="results_dawin", help="Directory containing JSON summaries.")
     parser.add_argument("--precision", type=str, default="bf16", choices=["fp32", "bf16", "fp16"])
-    parser.add_argument("--venue", type=str, default="neurips", choices=["neurips", "iclr", "icml"])
+    parser.add_argument("--venue", type=str, default="generic", choices=["generic", "neurips", "iclr", "icml"])
     parser.add_argument("--decimals", type=int, default=4, help="Decimal places for accuracy metrics.")
     parser.add_argument("--output", type=str, default="results_dawin/dawin_paper_tables.tex", help="Output .tex path.")
     args = parser.parse_args()

@@ -411,7 +411,7 @@ def export_latex_tables_automatically(
         print(f"[LaTeX Exporter] Warning: {exporter_script} not found; skipping automatic LaTeX export.")
         return None
 
-    out_tex = tex_output_path or (results_dir / f"dawin_{venue}_tables_{precision}.tex")
+    out_tex = tex_output_path or (results_dir / (f"dawin_tables_{precision}.tex" if venue == "generic" else f"dawin_{venue}_tables_{precision}.tex"))
     cmd = [
         sys.executable,
         str(exporter_script),
@@ -527,8 +527,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--venue",
         type=str,
-        default="neurips",
-        choices=["neurips", "iclr", "icml"],
+        default="generic",
+        choices=["generic", "neurips", "iclr", "icml"],
         help="Target conference style for automated LaTeX table export (default: neurips).",
     )
     parser.add_argument(
