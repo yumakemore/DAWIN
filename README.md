@@ -67,7 +67,7 @@ For interactive, cell-by-cell execution on cloud GPUs (`B200`, `B100`, `G4`, `A1
 
 ## Reproducing Benchmarks & Tables
 
-All benchmark, profiling, and export commands default to saving outputs in `./results_dawin` (override with `--results-dir <PATH>` to write directly to persistent storage such as Google Drive or a cluster volume).
+All benchmark, profiling, and export commands default to saving outputs in `./results_dawin` (override with `--results-dir <PATH>` ).
 
 ### 1. Full 11-Task 10-Seed Benchmark Sweep
 ```bash
