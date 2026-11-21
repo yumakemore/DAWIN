@@ -57,3 +57,9 @@ python verify_triton_dawin.py
 ### Google Colab Notebook: DAWIN_10seed.ipynb
 
 For interactive, cell-by-cell execution on cloud GPUs (`A100`, `G4`, or `L4`), use DAWIN_10seed.ipynb in your Google Colab.
+
+
+## Reproducing Benchmarks & Tables
+...
+## Citation
+...
