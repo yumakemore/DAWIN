@@ -8,17 +8,19 @@
 
 Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Junwhan Kim (University of the District of Columbia).
 
-DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron \(y = \sigma(\mathbf{w}^\top \mathbf{x} + b)\). For each unit m, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet \(u_{i,m}\) and integrates it into a neuron-local state \(\psi_{i,m} \in \mathbb{C}\) via:
+DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron $y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$. For each unit $m$, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet $u_{i,m}$ and integrates it into a neuron-local state $\psi_{i,m} \in \mathbb{C}$ via:
 
-\[u_{i,m} = A_m \alpha_m(\Delta t_i) \exp\big(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m)\big), \qquad \psi_{i,m} = \exp\big(-(\gamma_m + i\omega_m)\Delta t_i\big)\psi_{i-1,m} + u_{i,m}\]
+$$
+u_{i,m} = A_m \alpha_m(\Delta t_i) \exp\big(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m)\big), \qquad \psi_{i,m} = \exp\big(-(\gamma_m + i\omega_m)\Delta t_i\big)\psi_{i-1,m} + u_{i,m}
+$$
 
-where \(\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}\) for \(\Delta t_i > 0\) and \(\alpha_m(0) = 1\).
+where $\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$ and $\alpha_m(0) = 1$.
 
 ---
 
 ## Drop-In Usage Example
 
-`DAWINLinear` (and its fused CUDA kernel `TritonDAWINLinear`) replaces `nn.Linear + Activation` anywhere in a model while propagating continuous-time complex quadrature states across irregular intervals \(\Delta t_i\):
+`DAWINLinear` (and its fused CUDA kernel `TritonDAWINLinear`) replaces `nn.Linear + Activation` anywhere in a model while propagating continuous-time complex quadrature states across irregular intervals $\Delta t_i$:
 
 ```python
 import torch
