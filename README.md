@@ -5,7 +5,7 @@ Official PyTorch and Triton reference implementation for **"Damped Atomic Wave I
 DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron $y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$. For each unit $m$, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet $u$ and integrates it into a neuron-local state $\psi \in \mathbb{C}$ via:
 
 $$
-u_{i,m} = A_m \alpha_m(\Delta t_i) \exp\!\big(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m)\big), \qquad \psi_{i,m} = \exp\!\big(-(\gamma_m + i\omega_m)\Delta t_i\big)\psi_{i-1,m} + u_{i,m}
+u_{i,m} = A_m \alpha_m(\Delta t_i) \exp(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m)), \qquad \psi_{i,m} = \exp(-(\gamma_m + i\omega_m)\Delta t_i)\psi_{i-1,m} + u_{i,m}
 $$
 
 where $\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$ and $\alpha_m(0) = 1$.
