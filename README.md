@@ -2,7 +2,7 @@
 
 Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Junwhan Kim (University of the District of Columbia).
 
-DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron ($$y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$$). Each unit binds spatial wave phase ($\mathbf{k}_m^\top \mathbf{x}_i - \theta_m$) and continuous-time Zero-Order Hold (ZOH) interval scaling ($\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$, $\alpha_m(0) = 1$) into an indivisible (*atomic*) complex wave packet $u_{i,m} = A_m \alpha_m(\Delta t_i) \exp(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m))$ and integrates it into a neuron-local complex state evolved by $\mathcal{D}_m(\Delta t_i) = \exp(-(\gamma_m + i\omega_m)\Delta t_i)$.
+DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron ( $y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$ ). Each unit binds spatial wave phase ( $\mathbf{k}_m^\top \mathbf{x}_i - \theta_m$ ) and continuous-time Zero-Order Hold (ZOH) interval scaling ( $\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$, $\alpha_m(0) = 1$ ) into an indivisible (*atomic*) complex wave packet $u_{i,m} = A_m \alpha_m(\Delta t_i) \exp(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m))$ and integrates it into a neuron-local complex state evolved by $\mathcal{D}_m(\Delta t_i) = \exp(-(\gamma_m + i\omega_m)\Delta t_i)$.
 
 ---
 
