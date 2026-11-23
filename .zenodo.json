@@ -1,0 +1,24 @@
+{
+  "title": "DAWIN: Damped Atomic Wave Integration Neurons (PyTorch & Triton Reference Implementation)",
+  "upload_type": "software",
+  "description": "Official PyTorch and multi-block Triton reference implementation for Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning.",
+  "creators": [
+    {
+      "name": "Yu, Byunggu",
+      "affiliation": "University of the District of Columbia"
+    },
+    {
+      "name": "Kim, Junwhan",
+      "affiliation": "University of the District of Columbia"
+    }
+  ],
+  "keywords": [
+    "Continuous-Time Neural Networks",
+    "Irregular Time Series",
+    "State Space Models",
+    "Parallel Associative Scan",
+    "Triton Kernels",
+    "PyTorch"
+  ],
+  "license": "MIT"
+}
