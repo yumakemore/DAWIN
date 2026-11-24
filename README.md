@@ -7,7 +7,7 @@
 [![Triton 3.0+](https://img.shields.io/badge/Triton-3.0%2B-76B900.svg)](https://triton-lang.org/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_10seed.ipynb)
 
-Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Junwhan Kim (University of the District of Columbia).
+Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Justin Kim (University of the District of Columbia).
 
 DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron $y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$. For each unit $m$, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet $u_{i,m}$ and integrates it into a neuron-local state $\psi_{i,m} \in \mathbb{C}$ via:
 
@@ -135,13 +135,13 @@ If you find DAWIN useful in your research, please cite both the paper and the so
 ```bibtex
 @article{yu2026dawin,
   title   = {Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning},
-  author  = {Yu, Byunggu and Kim, Junwhan},
+  author  = {Yu, Byunggu and Kim, Justin},
   year    = {2026},
   journal = {arXiv preprint}
 }
 
 @software{yu2026dawin_code,
-  author    = {Yu, Byunggu and Kim, Junwhan},
+  author    = {Yu, Byunggu and Kim, Justin},
   title     = {DAWIN: Damped Atomic Wave Integration Neurons (PyTorch \& Triton Reference Implementation)},
   year      = {2026},
   publisher = {Zenodo},

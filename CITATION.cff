@@ -12,7 +12,7 @@ authors:
     given-names: "Byunggu"
     affiliation: "University of the District of Columbia"
   - family-names: "Kim"
-    given-names: "Junwhan"
+    given-names: "Justin"
     affiliation: "University of the District of Columbia"
 preferred-citation:
   type: article
@@ -21,6 +21,6 @@ preferred-citation:
     - family-names: "Yu"
       given-names: "Byunggu"
     - family-names: "Kim"
-      given-names: "Junwhan"
+      given-names: "Justin"
   year: 2026
   journal: "arXiv preprint"
