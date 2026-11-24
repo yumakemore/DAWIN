@@ -130,7 +130,7 @@ Running the benchmark and export scripts populates `./results_dawin` with:
 
 ## Citation
 
-If you find DAWIN useful in your research, please cite:
+If you find DAWIN useful in your research, please cite both the paper and the software archive:
 
 ```bibtex
 @article{yu2026dawin,
@@ -138,6 +138,16 @@ If you find DAWIN useful in your research, please cite:
   author  = {Yu, Byunggu and Kim, Junwhan},
   year    = {2026},
   journal = {arXiv preprint}
+}
+
+@software{yu2026dawin_code,
+  author    = {Yu, Byunggu and Kim, Junwhan},
+  title     = {DAWIN: Damped Atomic Wave Integration Neurons (PyTorch \& Triton Reference Implementation)},
+  year      = {2026},
+  publisher = {Zenodo},
+  version   = {v1.0.0},
+  doi       = {10.5281/zenodo.24485897},
+  url       = {https://doi.org/10.5281/zenodo.24485897}
 }
 ```
 
