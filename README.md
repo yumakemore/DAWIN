@@ -5,7 +5,7 @@
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![PyTorch 2.4+](https://img.shields.io/badge/PyTorch-2.4%2B-EE4C2C.svg)](https://pytorch.org/)
 [![Triton 3.0+](https://img.shields.io/badge/Triton-3.0%2B-76B900.svg)](https://triton-lang.org/)
-[![Open In Colab](https://://google.com)](https://://google.com)
+[![Open In Colab](https://google.com)](https://google.com)
 
 Official PyTorch and Triton reference implementation for **"Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"** by Byunggu Yu and Junwhan Kim (University of the District of Columbia).
 
@@ -70,7 +70,7 @@ reg_loss = hidden_layer.laplacian_penalty()    # closed-form spatiotemporal curv
 ## Installation & Runtime Policy
 
 ```bash
-git clone https://://github.com
+git clone https://github.com
 cd DAWIN
 pip install -r requirements.txt
 ```

@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software or benchmark suite, please cite both the software archive and the accompanying paper."
+title: "DAWIN: Damped Atomic Wave Integration Neurons (PyTorch & Triton Reference Implementation)"
+version: v1.0.0
+doi: 10.5281/zenodo.24485897
+date-released: 2026-11-23
+url: "https://github.com/yumakemore/DAWIN"
+repository-code: "https://github.com/yumakemore/DAWIN"
+license: MIT
+authors:
+  - family-names: "Yu"
+    given-names: "Byunggu"
+    affiliation: "University of the District of Columbia"
+  - family-names: "Kim"
+    given-names: "Junwhan"
+    affiliation: "University of the District of Columbia"
+preferred-citation:
+  type: article
+  title: "Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"
+  authors:
+    - family-names: "Yu"
+      given-names: "Byunggu"
+    - family-names: "Kim"
+      given-names: "Junwhan"
+  year: 2026
+  journal: "arXiv preprint"
