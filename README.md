@@ -1,6 +1,7 @@
 # Damped Atomic Wave Integration Neurons (DAWIN)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![DOI](https://arxiv.org/badge/DOI/10.48550/arXiv.2611.30025.svg)](https://doi.org/10.48550/arXiv.2611.30025)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24485897.svg)](https://doi.org/10.5281/zenodo.24485897)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![PyTorch 2.4+](https://img.shields.io/badge/PyTorch-2.4%2B-EE4C2C.svg)](https://pytorch.org/)
