@@ -69,7 +69,7 @@ reg_loss = hidden_layer.laplacian_penalty()    # closed-form spatiotemporal curv
 ## Installation & Runtime Policy
 
 ```bash
-git clone https://://github.com
+git clone https://github.com
 cd DAWIN
 pip install -r requirements.txt
 ```
