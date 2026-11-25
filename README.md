@@ -10,6 +10,13 @@
 [![Quickstart in Colab](https://img.shields.io/badge/Colab-Quickstart_(30s)-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
 [![11-Task Benchmarks in Colab](https://img.shields.io/badge/Colab-11--Task_Benchmarks-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_10seed.ipynb)
 
+[![arXiv](https://shields.io)](https://arxiv.org)
+[![Open In Colab](https://google.com)](https://google.com)
+[![PyPI](https://shields.io)](https://pypi.org)
+[![License: MIT](https://shields.io)](LICENSE)
+
+> **Try DAWIN in 30 Seconds (Zero Setup):** Run [`DAWIN_Quickstart.ipynb`](https://google.com) directly in Google Colab to install `dawin`, train a continuous-time `DAWINMLP`, verify Δt-shuffling causality, and plot out-of-range horizon extrapolation—or install locally via `pip install dawin`.
+
 Official PyTorch and Triton reference implementation for **["Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"](https://arxiv.org/abs/2611.30025)** ([PDF](https://arxiv.org/pdf/2611.30025)) by Byunggu Yu and Justin Kim (University of the District of Columbia).
 
 DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron <code>y = σ(wᵀx + b)</code>. For each unit <i>m</i>, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet <code>u<sub>i,m</sub></code> and integrates it into a neuron-local state <code>ψ<sub>i,m</sub> ∈ ℂ</code> via:
