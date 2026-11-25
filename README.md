@@ -4,7 +4,7 @@
 [![Quickstart in Colab](https://img.shields.io/badge/Colab-Quickstart_%2830s%29-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
 [![11-Task Benchmarks in Colab](https://img.shields.io/badge/Colab-11--Task_Benchmarks-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_10seed.ipynb)
 [![arXiv](https://img.shields.io/badge/arXiv-2611.30025-b31b1b.svg)](https://arxiv.org/abs/2611.30025)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24485897.svg)](https://doi.org/10.5281/zenodo.24485897)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24485896.svg)](https://doi.org/10.5281/zenodo.24485896)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 [![PyTorch 2.4+](https://img.shields.io/badge/PyTorch-2.4%2B-EE4C2C.svg)](https://pytorch.org/)
 [![Triton 3.0+](https://img.shields.io/badge/Triton-3.0%2B-76B900.svg)](https://triton-lang.org/)
