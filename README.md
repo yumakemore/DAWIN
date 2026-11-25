@@ -163,6 +163,15 @@ If you find DAWIN useful in your research, please cite both the paper and the so
   doi       = {10.5281/zenodo.24485897},
   url       = {https://doi.org/10.5281/zenodo.24485897}
 }
+
+@software{yu2026dawin_pypi,
+  author    = {Yu, Byunggu and Kim, Justin},
+  title     = {dawin: PyPI Distribution of Damped Atomic Wave Integration Neurons},
+  year      = {2026},
+  publisher = {Python Package Index (PyPI)},
+  version   = {1.0.1},
+  url       = {https://pypi.org/project/dawin/}
+}
 ```
 
 ## License
