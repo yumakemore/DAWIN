@@ -1,3 +1,5 @@
+from importlib.metadata import PackageNotFoundError, version
+
 from .core import DAWINLinear, compute_dawin_laplacian_loss
 from .models import DAWINMLP, DAWINTransformer, DAWINGNN
 
@@ -7,7 +9,11 @@ except ImportError:
     TritonDAWINLinear = None
     triton_dawin_scan = None
 
-__version__ = "1.0.3"
+try:
+    __version__ = version("dawin")
+except PackageNotFoundError:
+    __version__ = "1.0.4"
+
 __all__ = [
     "DAWINLinear",
     "TritonDAWINLinear",
@@ -17,4 +23,3 @@ __all__ = [
     "DAWINTransformer",
     "DAWINGNN",
 ]
-
