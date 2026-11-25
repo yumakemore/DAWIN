@@ -142,15 +142,16 @@ class DAWINLinear(nn.Module):
         omega = self.omega.float().view(1, 1, -1)
         theta = self.theta.float().view(1, 1, -1)
 
+        zoh = torch.where(dt_f > 0.0, 1.0 - torch.exp(-gamma * dt_f), torch.ones_like(dt_f))
         if self.ablation == "decoupled":
             phi = -dt_f * omega - theta
             inj_scale = F.linear(x_f, self.linear_inj.weight.float())
-            u_re = inj_scale * amp * torch.cos(phi)
-            u_im = inj_scale * amp * torch.sin(phi)
+            u_re = (inj_scale * amp * zoh) * torch.cos(phi)
+            u_im = (inj_scale * amp * zoh) * torch.sin(phi)
         else:
             phi = F.linear(x_f, self.k.float()) - theta
-            u_re = amp * torch.cos(phi)
-            u_im = amp * torch.sin(phi)
+            u_re = (amp * zoh) * torch.cos(phi)
+            u_im = (amp * zoh) * torch.sin(phi)
 
         if self.ablation == "memoryless":
             p = u_re
