@@ -63,6 +63,7 @@ reg_loss = hidden_layer.laplacian_penalty()    # closed-form spatiotemporal curv
 * `verify_extended_comparators.py`: Validates forward shapes, parameter parity (≤ 2%), and gradient flow across all parameter-matched comparators.
 * `verify_dawin_datasets.py`: Validates tensor shapes, non-negative Δt invariants, and evaluation metrics across all 11 benchmark configurations.
 * `verify_triton_dawin.py`: Verifies numerical parity of the multi-block Triton kernel under `FP32`, `BF16`, and `FP16` autocast and benchmarks GPU latency.
+* [`DAWIN_Quickstart.ipynb`](DAWIN_Quickstart.ipynb): Lightweight 30-second PyPI quickstart demo (`pip install dawin`) requiring no repository cloning.
 * [`DAWIN_10seed.ipynb`](DAWIN_10seed.ipynb): Self-contained Jupyter/Colab notebook for interactive GPU execution and result inspection.
 
 ---
