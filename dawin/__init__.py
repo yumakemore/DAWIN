@@ -12,7 +12,7 @@ except ImportError:
 try:
     __version__ = version("dawin")
 except PackageNotFoundError:
-    __version__ = "1.0.4"
+    __version__ = "1.0.5"
 
 __all__ = [
     "DAWINLinear",
