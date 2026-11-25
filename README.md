@@ -171,7 +171,7 @@ If you find DAWIN useful in your research, please cite both the paper and the so
   title     = {dawin: PyPI Distribution of Damped Atomic Wave Integration Neurons},
   year      = {2026},
   publisher = {Python Package Index (PyPI)},
-  version   = {1.0.3},
+  version   = {1.0.4},
   url       = {https://pypi.org/project/dawin/}
 }
 ```
