@@ -1,7 +1,6 @@
 # Damped Atomic Wave Integration Neurons (DAWIN)
 
 [![PyPI version](https://img.shields.io/pypi/v/dawin.svg)](https://pypi.org/project/dawin/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
 [![Quickstart in Colab](https://img.shields.io/badge/Colab-Quickstart_%2830s%29-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
 [![11-Task Benchmarks in Colab](https://img.shields.io/badge/Colab-11--Task_Benchmarks-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_10seed.ipynb)
 [![arXiv](https://img.shields.io/badge/arXiv-2611.30025-b31b1b.svg)](https://arxiv.org/abs/2611.30025)
