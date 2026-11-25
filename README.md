@@ -1,9 +1,9 @@
 # Damped Atomic Wave Integration Neurons (DAWIN)
 
 [![PyPI version](https://img.shields.io/pypi/v/dawin.svg)](https://pypi.org/project/dawin/)
-[![Open In Colab](https://://google.com/assets/colab-badge.svg)](https://://google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
-[![Quickstart in Colab](https://img.shields.io/badge/Colab-Quickstart_%2830s%29-F9AB00?logo=googlecolab&logoColor=white)](https://://google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
-[![11-Task Benchmarks in Colab](https://img.shields.io/badge/Colab-11--Task_Benchmarks-F9AB00?logo=googlecolab&logoColor=white)](https://://google.com/github/yumakemore/DAWIN/blob/main/DAWIN_10seed.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
+[![Quickstart in Colab](https://img.shields.io/badge/Colab-Quickstart_%2830s%29-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb)
+[![11-Task Benchmarks in Colab](https://img.shields.io/badge/Colab-11--Task_Benchmarks-F9AB00?logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_10seed.ipynb)
 [![arXiv](https://img.shields.io/badge/arXiv-2611.30025-b31b1b.svg)](https://arxiv.org/abs/2611.30025)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24485897.svg)](https://doi.org/10.5281/zenodo.24485897)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
@@ -11,7 +11,7 @@
 [![Triton 3.0+](https://img.shields.io/badge/Triton-3.0%2B-76B900.svg)](https://triton-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> **Try DAWIN in 30 Seconds (Zero Setup):** Run [`DAWIN_Quickstart.ipynb`](https://://google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb) directly in Google Colab to install `dawin`, train a continuous-time `DAWINMLP`, verify Δt-shuffling causality, and plot out-of-range horizon extrapolation—or install locally via `pip install dawin`.
+> **Try DAWIN in 30 Seconds (Zero Setup):** Run [`DAWIN_Quickstart.ipynb`](https://colab.research.google.com/github/yumakemore/DAWIN/blob/main/DAWIN_Quickstart.ipynb) directly in Google Colab to install `dawin`, train a continuous-time `DAWINMLP`, verify Δt-shuffling causality, and plot out-of-range horizon extrapolation—or install locally via `pip install dawin`.
 
 Official PyTorch and Triton reference implementation for **["Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"](https://arxiv.org/abs/2611.30025)** ([PDF](https://arxiv.org/pdf/2611.30025)) by Byunggu Yu and Justin Kim (University of the District of Columbia).
 
