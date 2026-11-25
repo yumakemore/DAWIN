@@ -7,7 +7,7 @@ except ImportError:
     TritonDAWINLinear = None
     triton_dawin_scan = None
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __all__ = [
     "DAWINLinear",
     "TritonDAWINLinear",
