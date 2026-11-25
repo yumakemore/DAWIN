@@ -156,12 +156,12 @@ If you find DAWIN useful in your research, please cite both the paper and the so
 
 @software{yu2026dawin_code,
   author    = {Yu, Byunggu and Kim, Justin},
-  title     = {DAWIN: Damped Atomic Wave Integration Neurons (PyTorch \& Triton Reference Implementation)},
+  title     = {DAWIN: Damped Atomic Wave Integration Neurons (PyTorch and Triton Reference Implementation)},
   year      = {2026},
   publisher = {Zenodo},
-  version   = {v1.0.0},
-  doi       = {10.5281/zenodo.24485897},
-  url       = {https://doi.org/10.5281/zenodo.24485897}
+  version   = {v1.0.1},
+  doi       = {10.5281/zenodo.24485896},
+  url       = {https://doi.org/10.5281/zenodo.24485896}
 }
 
 @software{yu2026dawin_pypi,
