@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dawin"
-version = "1.0.1"
+version = "1.0.2"
 description = "Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"
 readme = "README.md"
 license = "MIT"
