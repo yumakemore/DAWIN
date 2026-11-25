@@ -11,19 +11,17 @@
 
 Official PyTorch and Triton reference implementation for **["Damped Atomic Wave Integration Neurons (DAWIN): A Universal Primitive for Continuous-Time Spatiotemporal Learning"](https://arxiv.org/abs/2611.30025)** ([PDF](https://arxiv.org/pdf/2611.30025)) by Byunggu Yu and Justin Kim (University of the District of Columbia).
 
-DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron $y = \sigma(\mathbf{w}^\top \mathbf{x} + b)$. For each unit $m$, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet $u_{i,m}$ and integrates it into a neuron-local state $\psi_{i,m} \in \mathbb{C}$ via:
+DAWIN serves as a drop-in, architecture-agnostic replacement for the conventional perceptron <code>y = σ(wᵀx + b)</code>. For each unit <i>m</i>, DAWIN combines spatial wave phase and continuous-time Zero-Order Hold (ZOH) interval scaling into an indivisible (*atomic*) complex wave packet <code>u<sub>i,m</sub></code> and integrates it into a neuron-local state <code>ψ<sub>i,m</sub> ∈ ℂ</code> via:
 
-$$
-u_{i,m} = A_m \alpha_m(\Delta t_i) \exp\big(i(\mathbf{k}_m^\top \mathbf{x}_i - \theta_m)\big), \qquad \psi_{i,m} = \exp\big(-(\gamma_m + i\omega_m)\Delta t_i\big)\psi_{i-1,m} + u_{i,m}
-$$
+> **u<sub>i,m</sub> = A<sub>m</sub> α<sub>m</sub>(Δt<sub>i</sub>) exp(i(k<sub>m</sub><sup>⊤</sup> x<sub>i</sub> − θ<sub>m</sub>)), &emsp; ψ<sub>i,m</sub> = exp(−(γ<sub>m</sub> + iω<sub>m</sub>)Δt<sub>i</sub>) ψ<sub>i−1,m</sub> + u<sub>i,m</sub>**
 
-where $\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$ and $\alpha_m(0) = 1$.
+where **α<sub>m</sub>(Δt<sub>i</sub>) = 1 − e<sup>−γ<sub>m</sub>Δt<sub>i</sub></sup>** for **Δt<sub>i</sub> > 0** and **α<sub>m</sub>(0) = 1**.
 
 ---
 
 ## Drop-In Usage Example
 
-`DAWINLinear` (and its fused CUDA kernel `TritonDAWINLinear`) replaces `nn.Linear + Activation` anywhere in a model while propagating continuous-time complex quadrature states across irregular intervals $\Delta t_i$:
+`DAWINLinear` (and its fused CUDA kernel `TritonDAWINLinear`) replaces `nn.Linear + Activation` anywhere in a model while propagating continuous-time complex quadrature states across irregular intervals Δt<sub>i</sub>:
 
 ```python
 import torch
@@ -49,10 +47,10 @@ reg_loss = hidden_layer.laplacian_penalty()    # closed-form spatiotemporal curv
 
 ### Core Model, Kernel & Dataset Modules
 * `dawin_core.py`: Drop-in `DAWINLinear` primitive with paired-real quadrature propagation, parallel associative prefix scan (`torch._higher_order_ops.associative_scan`), exact serial fallback, component ablation toggles (`none`, `undamped`, `memoryless`, `cosine_only`, `decoupled`), and closed-form spatiotemporal Laplacian curvature regularization (`laplacian_penalty()`, `compute_dawin_laplacian_loss()`).
-* `dawin_triton.py`: Multi-block chunked Triton parallel associative scan kernel and custom autograd bridge supporting arbitrarily long sequences ($L > 4096$) in $O(\log L)$ parallel depth without materializing intermediate complex $[B, L, M]$ tensors in HBM.
-* `dawin_models.py`: Drop-in continuous-time backbones (`DAWINMLP`, `DAWINTransformer`, `DAWINGNN`) with automatic CUDA Triton dispatch (`use_triton=True`), alongside parameter-matched comparators (`MatchedReLUMLP`, `MatchedTimeTransformer`, `MatchedNeuralCDE`, `MatchedS5`, `MatchedMamba`, `MatchedGRUGNN`) and `find_matched_width` ($\le 2\%$ parameter parity).
+* `dawin_triton.py`: Multi-block chunked Triton parallel associative scan kernel and custom autograd bridge supporting arbitrarily long sequences (L > 4096) in O(log L) parallel depth without materializing intermediate complex [B, L, M] tensors in HBM.
+* `dawin_models.py`: Drop-in continuous-time backbones (`DAWINMLP`, `DAWINTransformer`, `DAWINGNN`) with automatic CUDA Triton dispatch (`use_triton=True`), alongside parameter-matched comparators (`MatchedReLUMLP`, `MatchedTimeTransformer`, `MatchedNeuralCDE`, `MatchedS5`, `MatchedMamba`, `MatchedGRUGNN`) and `find_matched_width` (≤ 2% parameter parity).
 * `dawin_datasets.py`: Standardized data loaders, training-only normalization pipelines, and task metrics for MuJoCo irregular dynamics (`HalfCheetah-v5`, `Hopper-v5`, `Reacher-v5`, `Walker2d-v5`), PhysioNet Challenge 2012 (mask-aware mortality, mask-aware imputation, and dense WSP displacement), and ETH/UCY + JAAD trajectories.
-* `dawin_diagnostics.py`: RQ3 $\Delta t$-intervention diagnostics (true, batch-shuffled $\Delta t_{\text{perm}}$, and constant-mean $\Delta t_{\text{const}}$), RQ4 GPU throughput/memory profiling, and 20,000-resample paired bootstrap / Holm-Bonferroni significance tests.
+* `dawin_diagnostics.py`: RQ3 Δt-intervention diagnostics (true, batch-shuffled Δt<sub>perm</sub>, and constant-mean Δt<sub>const</sub>), RQ4 GPU throughput/memory profiling, and 20,000-resample paired bootstrap / Holm-Bonferroni significance tests.
 
 ### Experiment Runners, Exporters & Plotting Scripts
 * `run_dawin_experiments.py`: Executes 10-seed (`101`–`110`) parameter-matched sweeps for a single task with configurable `--precision` (`fp32`, `bf16`, `fp16`) and writes `.json`, `.csv`, and `.md` summaries.
@@ -61,9 +59,9 @@ reg_loss = hidden_layer.laplacian_penalty()    # closed-form spatiotemporal curv
 * `plot_dawin_figures.py`: Renders publication-ready vector (`.pdf`) and raster (`.png`) figures for RQ1/RQ2 accuracy comparisons, RQ3 causal timing interventions, and RQ4 NVIDIA B200 GPU scaling curves.
 
 ### Verification Suites & Interactive Notebook
-* `verify_dawin_harness.py`: Validates serial-vs-scan equivalence, BIBO stability under spatial outliers ($\|\mathbf{x}\| \sim 10^6$), parameter parity, Triton-vs-PyTorch backbone gradient parity, and the end-to-end synthetic-to-LaTeX-and-figures pipeline.
-* `verify_extended_comparators.py`: Validates forward shapes, parameter parity ($\le 2\%$), and gradient flow across all parameter-matched comparators.
-* `verify_dawin_datasets.py`: Validates tensor shapes, non-negative $\Delta t$ invariants, and evaluation metrics across all 11 benchmark configurations.
+* `verify_dawin_harness.py`: Validates serial-vs-scan equivalence, BIBO stability under spatial outliers (‖x‖ ~ 10⁶), parameter parity, Triton-vs-PyTorch backbone gradient parity, and the end-to-end synthetic-to-LaTeX-and-figures pipeline.
+* `verify_extended_comparators.py`: Validates forward shapes, parameter parity (≤ 2%), and gradient flow across all parameter-matched comparators.
+* `verify_dawin_datasets.py`: Validates tensor shapes, non-negative Δt invariants, and evaluation metrics across all 11 benchmark configurations.
 * `verify_triton_dawin.py`: Verifies numerical parity of the multi-block Triton kernel under `FP32`, `BF16`, and `FP16` autocast and benchmarks GPU latency.
 * [`DAWIN_10seed.ipynb`](DAWIN_10seed.ipynb): Self-contained Jupyter/Colab notebook for interactive GPU execution and result inspection.
 
@@ -131,7 +129,7 @@ python plot_dawin_figures.py --results-dir results_dawin --precision bf16 --form
 
 ### Generated Output Artifacts
 Running the benchmark and export scripts populates `./results_dawin` with:
-* `master_benchmark_summary_<precision>.{json,csv,md}`: Aggregated 10-seed Mean ± SD, paired differences, 95% bootstrap CIs, Holm-Bonferroni p-values, and RQ3 $\Delta t$-intervention results.
+* `master_benchmark_summary_<precision>.{json,csv,md}`: Aggregated 10-seed Mean ± SD, paired differences, 95% bootstrap CIs, Holm-Bonferroni p-values, and RQ3 Δt-intervention results.
 * `rq4_b200_scaling_<precision>.{json,csv,md}`: GPU latency (`ms`), transition throughput (`transitions/s`), and peak VRAM (`MiB`) across batch sizes `1, 16, 256, 4096`.
 * `dawin_tables_<precision>.tex`: Ready-to-include LaTeX `booktabs` tables (`\begin{table*}`).
 * `figures/fig_rq*.{pdf,png}`: Publication-ready accuracy comparison, timing-intervention, and scaling figures.
