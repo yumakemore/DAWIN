@@ -1,5 +1,6 @@
 # Damped Atomic Wave Integration Neurons (DAWIN)
 
+[![PyPI version](https://img.shields.io/pypi/v/dawin.svg)](https://pypi.org/project/dawin/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![arXiv](https://img.shields.io/badge/arXiv-2611.30025-b31b1b.svg)](https://arxiv.org/abs/2611.30025)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24485897.svg)](https://doi.org/10.5281/zenodo.24485897)
@@ -27,7 +28,7 @@ where $\alpha_m(\Delta t_i) = 1 - e^{-\gamma_m \Delta t_i}$ for $\Delta t_i > 0$
 
 ```python
 import torch
-from dawin_core import DAWINLinear
+from dawin import DAWINLinear
 
 # Batch size B=8, sequence length L=128, input dim d_in=16, hidden units M=64
 x = torch.randn(8, 128, 16, device="cuda")
@@ -70,6 +71,14 @@ reg_loss = hidden_layer.laplacian_penalty()    # closed-form spatiotemporal curv
 ---
 
 ## Installation & Runtime Policy
+
+Install the core PyTorch & Triton primitive directly from PyPI:
+
+```bash
+pip install dawin
+```
+
+To reproduce the full 11-task benchmark suite, LaTeX tables, and figures from source:
 
 ```bash
 git clone https://github.com/yumakemore/DAWIN.git
